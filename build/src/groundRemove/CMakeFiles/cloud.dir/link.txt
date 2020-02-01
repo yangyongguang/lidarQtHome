@@ -1,0 +1,1 @@
+/usr/bin/c++  -fPIC -Wall -Wextra -fPIC -O3  -shared -Wl,-soname,libcloud.so -o libcloud.so CMakeFiles/cloud.dir/src/cloud.cpp.o 

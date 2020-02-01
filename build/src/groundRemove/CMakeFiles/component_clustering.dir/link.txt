@@ -1,0 +1,2 @@
+/usr/bin/ar qc libcomponent_clustering.a  CMakeFiles/component_clustering.dir/src/component_clustering.cpp.o
+/usr/bin/ranlib libcomponent_clustering.a

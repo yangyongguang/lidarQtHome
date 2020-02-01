@@ -278,18 +278,27 @@ void cluster::getLShapePoints(const std::vector<Cloud::Ptr> & clusters, Cloud::P
 {    
     for (auto clusterIt = clusters.begin(); clusterIt != clusters.end(); ++clusterIt)
     {
-        std::unordered_map<int, point> pointMap;
-        Cloud pts;
+        std::unordered_map<int, point> pointMap; // 为了可视化
+        std::unordered_map<int, int> colToPoint; // 为了修改 lshapePoint 点标记
+        // Cloud pts;
         auto & cluster = (*clusterIt);
+        // 点云数量太少的， 算法不合适
+        // if (cluster->size() < 20)
+        //     continue;
         // 用来存储计算得来的 列索引
         std::vector<int> colVec;
+        int ptIdx = 0;
         for (auto ptIt = cluster->begin(); ptIt != cluster->end(); ++ptIt)
         {
             float angle = std::atan2(ptIt->y(), ptIt->x());
             size_t colIdx = ColFromAngle(angle);
             // 没有该索引， 就直接插入
             if (pointMap.find(colIdx) == pointMap.end())
+            {
+                // 标记为 边缘点
                 pointMap.insert(std::make_pair(colIdx, *ptIt));
+                colToPoint.insert(std::make_pair(colIdx, ptIdx));
+            }
             else
             {
                 // 如果距离小， 就跟新点
@@ -297,13 +306,20 @@ void cluster::getLShapePoints(const std::vector<Cloud::Ptr> & clusters, Cloud::P
                 //         ptIt->x(), ptIt->y(), ptIt->z(), ptIt->toSensor2D);
 
                 if (ptIt->toSensor2D < pointMap[colIdx].toSensor2D)
-                    pointMap[colIdx] = (*ptIt);
-            }      
+                {
+                    point ptTmp = (*ptIt);
+                    // ptTmp.z() = cluster->minZ;
+                    pointMap[colIdx] = ptTmp;
+                    colToPoint[colIdx] = ptIdx;
+                }
+            }  
+            ++ptIdx;    
         }
 
         for (auto it = pointMap.begin(); it != pointMap.end(); ++it)
         {
             points->emplace_back(it->second);
+            (*cluster)[colToPoint[it->first]].isLShapePoint = 1;
         }
     }
 }

@@ -1,3 +1,5 @@
+#ifndef QT_UTILS_H
+#define QT_UTILS_H
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
 #include <string>
@@ -25,3 +27,4 @@ namespace utils
     QImage MatToQImage(const cv::Mat &image);
 
 }
+#endif

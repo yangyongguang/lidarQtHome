@@ -9,13 +9,22 @@
 #include "box_type.h"
 #include "convex_hull.h"
 
-using namespace std;
+#include <Eigen/Core>
+#include <Eigen/Dense>
 
+#include <GL/gl.h>
+#include <GL/glu.h>
+
+// #include <opencv2/core/eigen.hpp>
+// #include <opencv2/opencv.hpp>
+// #include <opencv2/highgui.hpp>
+using namespace std;
+// using namespace cv;
 
 extern float picScale; // picScale * roiM = 30 * 30
 //const float picScale = 30;
 extern int ramPoints;
-extern int lSlopeDist;
+extern float lSlopeDist;
 extern int lnumPoints;
 
 extern float tHeightMin;
@@ -45,7 +54,12 @@ void CloudToVertexs(const Cloud::Ptr & cloud,
             // std::vector<Vertex> & topVertexs
             );
 
+// 最小二乘法拟合直线， 返回斜率 K
+float fitLine(const std::vector<point> & points);
+
 void getOrientedBBox(const vector<Cloud::Ptr> & clusteredPoints,
                     vector<Cloud::Ptr> & bbPoints);    
 
+// 根据方向拟合点云 RECT
+void fitRect(const float & k, const Cloud & cloud, std::vector<cv::Point2f> & rect);
 #endif //MY_PCL_TUTORIAL_BOX_FITTING_H

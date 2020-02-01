@@ -7,6 +7,7 @@
 #include <vector>
 #include <Eigen/Core>
 #include <memory>
+#include <opencv2/core/core.hpp>
 
 typedef std::pair<float, float> float2D;
 typedef std::vector<float2D> float2DVec;
@@ -68,6 +69,10 @@ public:
 public:
     int classID = -1;
     float toSensor2D = 0.0f;
+    // 是否是 lShapePoint
+    int isLShapePoint = 0;
+    
+
 private:
     Eigen::Vector3f _point;
     float _intensity;

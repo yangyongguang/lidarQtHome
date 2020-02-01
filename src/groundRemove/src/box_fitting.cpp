@@ -10,9 +10,9 @@ using namespace cv;
 float roiM = 120.0f;
 float picScale = 900/roiM;
 int ramPoints = 80;
-int lSlopeDist = 1.5; // 大于 1.5 米的对角线车
+float lSlopeDist = 1.0; // 大于 1.5 米的对角线车
 // int lnumPoints = 200;
-int lnumPoints = 80;
+int lnumPoints = 20;
 
 float sensorHeight = 0.1;
 // float tHeightMin = 1.2;
@@ -299,10 +299,18 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
     {   
         //遍历每个物体
         // Check lidar points number
-        if(clusteredPoints[iCluster]->size() == 0)
-            continue;
+        Cloud clusterTmp;
+        for (int idx = 0; idx < (*clusteredPoints[iCluster]).size(); ++idx)
+        {
+            if ((*clusteredPoints[iCluster])[idx].isLShapePoint != 0)
+                clusterTmp.emplace_back((*clusteredPoints[iCluster])[idx]);
+        }
 
-        int numPoints = (*clusteredPoints[iCluster]).size();
+        // int numPoints = (*clusteredPoints[iCluster]).size();
+        int numPoints = clusterTmp.size();
+        // 点数太少， minAreRect 不能调用
+        if (numPoints == 0)
+            continue;
         // vector<Point> pointVec(numPoints);
         vector<cv::Point2f> pointVec(numPoints);
         vector<Point2f> pcPoints(4);
@@ -310,12 +318,16 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
         float minM = 999; float maxM = -999; float maxZ = -99;
         // for center of gravity
         // float sumX = 0; float sumY = 0;
-        for (size_t iPoint = 0; iPoint < (*clusteredPoints[iCluster]).size(); iPoint++)
+        // for (size_t iPoint = 0; iPoint < (*clusteredPoints[iCluster]).size(); iPoint++)
+        for (size_t iPoint = 0; iPoint < clusterTmp.size(); iPoint++)
         {
             //遍历某个点云簇中的所有点
-            float pX = (*clusteredPoints[iCluster])[iPoint].x();
-            float pY = (*clusteredPoints[iCluster])[iPoint].y();
-            float pZ = (*clusteredPoints[iCluster])[iPoint].z();
+            // float pX = (*clusteredPoints[iCluster])[iPoint].x();
+            // float pY = (*clusteredPoints[iCluster])[iPoint].y();
+            // float pZ = (*clusteredPoints[iCluster])[iPoint].z();
+            float pX = clusterTmp[iPoint].x();
+            float pY = clusterTmp[iPoint].y();
+            float pZ = clusterTmp[iPoint].z();
             // cast (-15 < x,y < 15) into (0 < x,y < 30)          
             // float m = pY/pX;
             pointVec[iPoint].x = pX;
@@ -354,18 +366,27 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
 
         // start l shape fitting for car like object
         // lSlopeDist = 30, lnumPoints = 300
+        int sizePoint;
+        // fprintf(stderr, "slopeDist : %f, numPoints : %d\n", slopeDist, numPoints);
         if(slopeDist > lSlopeDist && numPoints > lnumPoints)
         {
             float maxDist = 0;
             float maxDx, maxDy;
 
             // 80 random points, get max distance
-            for(int i = 0; i < ramPoints; i++)
+            if (numPoints < ramPoints)
+                sizePoint = numPoints;
+            else
+                sizePoint = ramPoints;
+
+            for(int i = 0; i < sizePoint; i++)
             {
                 size_t pInd = randPoints(mt);
-                assert(pInd >= 0 && pInd < (*clusteredPoints[iCluster]).size());
-                float xI = (*clusteredPoints[iCluster])[pInd].x();
-                float yI = (*clusteredPoints[iCluster])[pInd].y();
+                // assert(pInd >= 0 && pInd < (*clusteredPoints[iCluster]).size());
+                // float xI = (*clusteredPoints[iCluster])[pInd].x();
+                // float yI = (*clusteredPoints[iCluster])[pInd].y();
+                float xI = clusterTmp[pInd].x();
+                float yI = clusterTmp[pInd].y();
 
                 // from equation of distance between line and point
                 float dist = abs(slope*xI-1*yI+maxMy-slope*maxMx)/sqrt(slope*slope + 1);
@@ -389,10 +410,63 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             float lastX = maxDx + maxMvecX + minMvecX;
             float lastY = maxDy + maxMvecY + minMvecY;
 
-            pcPoints[0] = Point2f(minMx, minMy);
-            pcPoints[1] = Point2f(maxDx, maxDy);
-            pcPoints[2] = Point2f(maxMx, maxMy);
-            pcPoints[3] = Point2f(lastX, lastY);
+            // 求 垂线 俩边的点集合
+            float k = (maxMvecY - minMvecY) / (maxMvecX - minMvecX + 1e-6);
+            float k_1 = -1 / (k_1 + 1e-6);
+            
+            // 垂直线段
+            Vertex vet(k_1, maxDy - k_1 * maxDx);
+            // 存储较长边点云集合
+            vector<point> ptSet;
+            float distA = (maxMy- maxDy) * (maxMy - maxDy) + (maxMx - maxDx) * (maxMx - maxDx);
+            float distB = (minMy- maxDy) * (minMy - maxDy) + (minMx - maxDx) * (minMx - maxDx);
+
+            // fprintf(stderr, "dist A -- > B(%f, %f)\n", distA, distB);            
+            // float zero
+            float lessZero;
+            if (distA < distB)
+            {
+                lessZero = k_1 * minMx + vet.y - minMy; 
+            }            
+            else
+            {
+                lessZero = k_1 * maxMx + vet.y - maxMy;
+            }
+
+            // fprintf(stderr, "k : %f\n", k);  
+            // 相乘大于零， 说明处于同一侧， 否则不同侧
+            // 搜集处于同一侧的点
+            for (int i = 0; i < numPoints; ++i)
+            {
+                float dist = k_1 * clusterTmp[i].x() + vet.y - clusterTmp[i].y();
+                if (dist * lessZero >= 0)
+                    ptSet.emplace_back(clusterTmp[i]);
+            }
+
+            // fprintf(stderr, "pointSetSize : %d\n", ptSet.size());  
+
+            // 拟合直线 ， 并确定 bbox
+            float rectK = fitLine(ptSet);
+            // fprintf(stderr, "rectK : %f\n", rectK);  
+            // 根据方向拟合 bbox 的
+            fitRect(rectK, *clusteredPoints[iCluster],  pcPoints);
+            
+            // glPushMatrix();
+            // glColor3f(0.0f, 1.0f, 0.0f);
+            // glLineWidth(3.0f);
+            // glBegin(GL_LINE);
+            // glVertex3f(maxDx, maxDy, 0.0f);
+            // glVertex3f(maxDx + 3 , maxDy + 3 * rectK, 0.0f);
+            // glEnd();
+            // glPopMatrix();
+
+            // fprintf(stderr, "pcPoints:\n");
+            // for (int idx = 0; idx < 4; ++idx)
+            //     fprintf(stderr, "(%f, %f)\n", pcPoints[idx].x, pcPoints[idx].y);
+            // pcPoints[0] = Point2f(minMx, minMy);
+            // pcPoints[1] = Point2f(maxDx, maxDy);
+            // pcPoints[2] = Point2f(maxMx, maxMy);
+            // pcPoints[3] = Point2f(lastX, lastY);
             // bool isPromising = ruleBasedFilter(pcPoints, maxZ, numPoints);
             // if(!isPromising) 
             //     continue;
@@ -400,7 +474,16 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
         else
         {
             //MAR fitting
+            // fprintf(stderr, "minAreaRect point size %d\n", pointVec.size());
+            auto & cloud = (*clusteredPoints[iCluster]);
+            std::vector<Point2f> pointVec(cloud.size());
+            for (int idx = 0; idx < cloud.size(); ++idx)
+            {
+                pointVec[idx] = Point2f(cloud[idx].x(), cloud[idx].y());
+            }
+
             RotatedRect rectInfo = minAreaRect(pointVec);
+            // fprintf(stderr, "minAreaRect finised\n");
             Point2f rectPoints[4]; 
             rectInfo.points(rectPoints);
             // covert points back to lidar coordinate
@@ -421,9 +504,9 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
                 o.x() = pcPoints[pclP].x;
                 o.y() = pcPoints[pclP].y;
                 if(pclH == 0) 
-                    o.z() = -1.73;//车体坐标系下点云,地面高度估计为0.1m
+                    o.z() = clusteredPoints[iCluster]->minZ;//车体坐标系下点云,地面高度估计为0.1m
                 else 
-                    o.z() = maxZ;
+                    o.z() = clusteredPoints[iCluster]->maxZ;
                 oneBboxPtr->emplace_back(o);
             }
         }
@@ -477,6 +560,121 @@ void CloudToVertexs(const Cloud::Ptr & cloud,
     // }
 }
 
+float fitLine(const std::vector<point> & points)
+{
+    const unsigned int n_points = points.size();
+    Eigen::MatrixXd X(n_points, 2);
+    Eigen::VectorXd Y(n_points);
+
+    unsigned int counter = 0;
+    for (auto it = points.begin(); it != points.end(); ++it)
+    {
+        X(counter, 0) = it->x();
+        X(counter, 1) = 1;
+        Y(counter) = it->y();
+        ++counter;
+    }
+
+    // y = k * x + b; 返回 k 和 b
+    Eigen::VectorXd result = X.colPivHouseholderQr().solve(Y);
+    return result(0);
+}
+
+void fitRect(const float & k, const Cloud & cloud, std::vector<Point2f> & rect)
+{
+    rect.reserve(4);
+    float k_1 = -1 / k;
+
+    // fprintf(stderr, "fitRect:\n");
+    // fprintf(stderr, "cloud size : %d\n", cloud.size());
+    // 斜率不为无穷时
+    if(k_1 != -std::numeric_limits<float>::infinity() && 
+        k_1 != std::numeric_limits<float>::infinity() &&
+        k !=  -std::numeric_limits<float>::infinity() &&
+        k !=  std::numeric_limits<float>::infinity())
+    {
+        // 初始化
+        float b_1, b_2, b_3, b_4;
+        b_1 = cloud[0].y() - k * cloud[0].x();
+        b_2 = cloud[0].y() - k * cloud[0].x();
+        b_3 = cloud[0].y() - k_1 * cloud[0].x();
+        b_4 = cloud[0].y() - k_1 * cloud[0].x();
+
+        for (size_t i = 0; i < cloud.size(); ++i)
+        {
+                  //点在直线的左边
+            if(k * cloud[i].x() + b_1 <= cloud[i].y())
+            {
+                b_1 = cloud[i].y() - k * cloud[i].x();
+            }
+
+            if(k * cloud[i].x() + b_2 >= cloud[i].y())
+            {
+                b_2 = cloud[i].y() - k * cloud[i].x();
+            }
+
+            if(k_1 * cloud[i].x() + b_3 <= cloud[i].y())
+            {
+                b_3 = cloud[i].y() - k_1 * cloud[i].x();
+            }
+
+            if(k_1 * cloud[i].x() + b_4 >= cloud[i].y())
+            {
+                b_4 = cloud[i].y() - k_1 * cloud[i].x();
+            }
+        }
+
+        // fprintf(stderr, "b_1, b_2, b_3, b_4, k, k_1--> (%f, %f, %f, %f, %f, %f)\n",
+        //              b_1, b_2, b_3, b_4, k, k_1);
+        Point2f vertex;
+        vertex.x = (b_3 - b_1) / (k - k_1);
+        vertex.y = vertex.x * k + b_1;
+        rect[0] = vertex;
+
+        vertex.x = (b_2 - b_3) / (k_1 - k);
+        vertex.y = vertex.x * k + b_2;
+        rect[1] = vertex;
+
+        vertex.x = (b_4 - b_2) / (k - k_1);
+        vertex.y = vertex.x * k + b_2;
+        rect[2] = vertex;
+        vertex.x = (b_1 - b_4) / (k_1 - k);
+        vertex.y = vertex.x * k + b_1;
+        rect[3] = vertex;
+    }
+    else
+    {
+        float max_x = -std::numeric_limits<float>::infinity();
+        float max_y = -std::numeric_limits<float>::infinity();
+        float min_x = std::numeric_limits<float>::infinity();
+        float min_y = std::numeric_limits<float>::infinity();
+
+        for(size_t i = 0; i < cloud.size(); i++)
+        {
+            max_x = (cloud[i].x() > max_x)?cloud[i].x():max_x;
+            max_y = (cloud[i].y() > max_y)?cloud[i].y():max_y;
+            min_x = (cloud[i].x() < min_x)?cloud[i].x():min_x;
+            min_y = (cloud[i].y() < min_y)?cloud[i].y():min_y;
+        }
+        Point2f vertex;
+        vertex.x = max_x;
+        vertex.y = max_y;
+        rect[0] = vertex;
+
+        vertex.x = max_x;
+        vertex.y = min_y;
+        rect[1] = vertex;
+
+        vertex.x = min_x;
+        vertex.y = min_y;
+        rect[2] = vertex;
+
+        vertex.x = min_x;
+        vertex.y = max_y;
+        rect[3] = vertex;
+    }
+    
+}
 
 void getOrientedBBox(const vector<Cloud::Ptr> & clusteredPoints,
                     vector<Cloud::Ptr> & bbPoints)

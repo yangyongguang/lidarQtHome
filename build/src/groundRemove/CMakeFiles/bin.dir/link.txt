@@ -1,0 +1,1 @@
+/usr/bin/c++  -fPIC -Wall -Wextra -fPIC -O3  -shared -Wl,-soname,libbin.so -o libbin.so CMakeFiles/bin.dir/src/bin.cpp.o 

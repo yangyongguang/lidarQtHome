@@ -1,0 +1,1 @@
+/usr/bin/c++   -Wall -Wextra -fPIC -O3   CMakeFiles/Text.dir/src/test.cpp.o  -o Text -rdynamic 

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libbox_fitting.a  CMakeFiles/box_fitting.dir/src/box_fitting.cpp.o
+/usr/bin/ranlib libbox_fitting.a

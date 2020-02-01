@@ -379,6 +379,7 @@ void MainWindow::onSliderMovedTo(int cloud_number)
             // getBBox(clusters, bboxPts);
             // fprintf(stderr, "------------------3\n");
             std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+            // L_shape bbox
             getBBox(clusters, bboxPts);
             getOrientedBBox(clusters, bboxPts2);
             std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();

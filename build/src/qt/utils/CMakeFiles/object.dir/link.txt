@@ -1,0 +1,1 @@
+/usr/bin/c++  -fPIC -Wall -Wextra -fPIC -O3  -shared -Wl,-soname,libobject.so -o libobject.so CMakeFiles/object.dir/object.cpp.o 

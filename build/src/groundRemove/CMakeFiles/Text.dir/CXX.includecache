@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/yyg/code/lidarCode/src/groundRemove/src/test.cpp
+iostream
+-
+cmath
+-
+list
+-
+hash_map
+-
+unordered_map
+-
+
