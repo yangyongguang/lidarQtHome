@@ -12,7 +12,8 @@ float picScale = 900/roiM;
 int ramPoints = 80;
 float lSlopeDist = 1.0; // 大于 1.5 米的对角线车
 // int lnumPoints = 200;
-int lnumPoints = 20;
+// 找到十二个 lShapePoint 就使用我们的算法
+int lnumPoints = 12; 
 
 float sensorHeight = 0.1;
 // float tHeightMin = 1.2;
@@ -293,7 +294,8 @@ void getBoundingBox(const vector<Cloud::Ptr> & clusteredPoints,
 }
 
 void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
-                    vector<Cloud::Ptr>& bbPoints)
+                    vector<Cloud::Ptr>& bbPoints,
+                    Cloud::Ptr & markPoints)
 {
     for (size_t iCluster = 0; iCluster < clusteredPoints.size(); iCluster++)
     {   
@@ -410,6 +412,10 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             float lastX = maxDx + maxMvecX + minMvecX;
             float lastY = maxDy + maxMvecY + minMvecY;
 
+            // 添加三个可视化点
+            markPoints->emplace_back(point(maxDx, maxDy, 0.0f));
+            markPoints->emplace_back(point(maxMx, maxMy, 0.0f));
+            markPoints->emplace_back(point(minMx, minMy, 0.0f));
             // 求 垂线 俩边的点集合
             float k = (maxMvecY - minMvecY) / (maxMvecX - minMvecX + 1e-6);
             float k_1 = -1 / (k_1 + 1e-6);
@@ -417,7 +423,8 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             // 垂直线段
             Vertex vet(k_1, maxDy - k_1 * maxDx);
             // 存储较长边点云集合
-            vector<point> ptSet;
+            // vector<point> ptSet;
+            vector<Point2f> ptSet;
             float distA = (maxMy- maxDy) * (maxMy - maxDy) + (maxMx - maxDx) * (maxMx - maxDx);
             float distB = (minMy- maxDy) * (minMy - maxDy) + (minMx - maxDx) * (minMx - maxDx);
 
@@ -427,10 +434,12 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             if (distA < distB)
             {
                 lessZero = k_1 * minMx + vet.y - minMy; 
+                markPoints->emplace_back(point((minMx + maxDx) / 2, (minMy + maxDy) / 2, 0.0f));
             }            
             else
             {
                 lessZero = k_1 * maxMx + vet.y - maxMy;
+                markPoints->emplace_back(point((maxMx + maxDx) / 2, (maxMy + maxDy) / 2, 0.0f));
             }
 
             // fprintf(stderr, "k : %f\n", k);  
@@ -440,26 +449,26 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             {
                 float dist = k_1 * clusterTmp[i].x() + vet.y - clusterTmp[i].y();
                 if (dist * lessZero >= 0)
-                    ptSet.emplace_back(clusterTmp[i]);
+                {
+                    // ptSet.emplace_back(clusterTmp[i]);
+                    ptSet.emplace_back(Point2f(clusterTmp[i].x(), clusterTmp[i].y()));
+                }
             }
 
             // fprintf(stderr, "pointSetSize : %d\n", ptSet.size());  
 
             // 拟合直线 ， 并确定 bbox
-            float rectK = fitLine(ptSet);
+            // float rectK = fitLine(ptSet);
+            // 使用 RANSAC 与噪声干扰有关系
+            float rectK;
+            if (ptSet.size() >= 8)
+                rectK = fitLineRansac(ptSet, 50, 0.08);
+            else
+                rectK = fitLine(ptSet);
             // fprintf(stderr, "rectK : %f\n", rectK);  
             // 根据方向拟合 bbox 的
             fitRect(rectK, *clusteredPoints[iCluster],  pcPoints);
             
-            // glPushMatrix();
-            // glColor3f(0.0f, 1.0f, 0.0f);
-            // glLineWidth(3.0f);
-            // glBegin(GL_LINE);
-            // glVertex3f(maxDx, maxDy, 0.0f);
-            // glVertex3f(maxDx + 3 , maxDy + 3 * rectK, 0.0f);
-            // glEnd();
-            // glPopMatrix();
-
             // fprintf(stderr, "pcPoints:\n");
             // for (int idx = 0; idx < 4; ++idx)
             //     fprintf(stderr, "(%f, %f)\n", pcPoints[idx].x, pcPoints[idx].y);
@@ -560,7 +569,69 @@ void CloudToVertexs(const Cloud::Ptr & cloud,
     // }
 }
 
-float fitLine(const std::vector<point> & points)
+// ransac 算法
+float fitLineRansac(const vector<cv::Point2f>& clouds, 
+                    const int & num_iterations,
+                    const float & tolerance)
+{
+    int max_num_fit = 0;
+    Point2f best_plane(0.0f, 0.0f);
+    for(int i = 0; i < num_iterations; ++i) 
+    {
+        // -- Get two random points.
+        Point2f p;
+        int idx0 = rand() % clouds.size();
+        p = clouds[idx0];
+
+        Point2f q;
+        int idx1 = rand() % clouds.size();
+        q = clouds[idx1];
+
+        // 选择了相同的点
+        if (p.x == q.x && p.y == q.y)
+            continue;
+
+        // -- Fit a line a'x = b.
+        Point2f a;
+        a.x = 1; //初始化其中一个轴为1, 后面归一化后， 就变成斜率向量了
+        if(p.y - q.y == 0)
+            continue;
+        else
+            a.y = -(p.x - q.x) / (p.y - q.y);
+        // 归一化斜率向量
+        float normVal = std::sqrt(a.x * a.x + a.y * a.y);
+        a.x = a.x / normVal;
+        a.y = a.y / normVal;
+
+        // a.normalize();
+        float b = a.dot(p);
+        assert(fabs(a.x * a.x + a.y * a.y - 1) < 1e-3);
+        assert(fabs(a.dot(p - q)) < 1e-3);
+        assert(fabs(a.dot(q) - b) < 1e-3);
+
+        // -- Count how many other points are close to the line.
+
+        int num_fit = 0;
+        for(int i = 0; i < clouds.size(); ++i) 
+        {
+            float adotx = a.dot(clouds[i]);
+            if(fabs(adotx - b) <= tolerance)
+                ++num_fit;
+        }
+
+        if(num_fit > max_num_fit) 
+        { 
+            max_num_fit = num_fit;
+            best_plane = a;
+        }
+    }
+    // return best_plane;
+    // 返回 k
+    return -1 * best_plane.x / best_plane.y;
+}
+
+// 最小二乘法
+float fitLine(const std::vector<Point2f> & points)
 {
     const unsigned int n_points = points.size();
     Eigen::MatrixXd X(n_points, 2);
@@ -569,9 +640,9 @@ float fitLine(const std::vector<point> & points)
     unsigned int counter = 0;
     for (auto it = points.begin(); it != points.end(); ++it)
     {
-        X(counter, 0) = it->x();
+        X(counter, 0) = it->x;
         X(counter, 1) = 1;
-        Y(counter) = it->y();
+        Y(counter) = it->y;
         ++counter;
     }
 

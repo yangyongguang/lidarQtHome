@@ -348,6 +348,7 @@ void MainWindow::onSliderMovedTo(int cloud_number)
     std::vector<Cloud::Ptr> clusters; 
     std::vector<Cloud::Ptr> bboxPts;  // minAre + pca
     std::vector<Cloud::Ptr> bboxPts2; // L_shape
+    Cloud::Ptr markPoints(new Cloud); // 标记的点
     if (ui->clusterCB->isChecked())
     {
         std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
@@ -380,7 +381,7 @@ void MainWindow::onSliderMovedTo(int cloud_number)
             // fprintf(stderr, "------------------3\n");
             std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
             // L_shape bbox
-            getBBox(clusters, bboxPts);
+            getBBox(clusters, bboxPts, markPoints);
             getOrientedBBox(clusters, bboxPts2);
             std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> fp_ms = end - start;
@@ -388,6 +389,8 @@ void MainWindow::onSliderMovedTo(int cloud_number)
             // fprintf(stderr, "------------------4\n");
             _viewer->AddDrawable(DrawableBBox::FromCloud(bboxPts, true));
             _viewer->AddDrawable(DrawableBBox::FromCloud(bboxPts2, true, 1));
+            _viewer->AddDrawable(DrawableCloud::FromCloud(markPoints, Eigen::Vector3f(0.0f, 1.0f, 0.2f),
+                     GLfloat(6)),"L_shape markPoints");
         }
 
         infoTextEdit->append("number of cluster : " + QString::number(cluster.getNumCluster()));
