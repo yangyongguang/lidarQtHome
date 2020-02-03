@@ -22,10 +22,10 @@ float tHeightMax = 2.6;
 // float tWidthMin = 0.5;
 // float tWidthMin = 0.4;
 float tWidthMin = 0.25;
-float tWidthMax = 3.5;
+float tWidthMax = 5.5;
 float tLenMin = 0.5;
-float tLenMax = 14.0;
-float tAreaMax = 20.0;
+float tLenMax = 25.0;
+float tAreaMax = 50.0;
 float tRatioMin = 1.2;
 float tRatioMax = 5.0;
 float minLenRatio = 3.0;
@@ -59,7 +59,7 @@ bool ruleBasedFilter(vector<Point2f> pcPoints, float maxZ, int numPoints)
 {
     bool isPromising = false;
     //minnimam points thresh
-    if(numPoints < 10) return isPromising;
+    if(numPoints < 8) return isPromising;
     // length is longest side of the rectangle while width is the shorter side.
     float width, length, height, area, ratio;
     float mass;
@@ -84,11 +84,10 @@ bool ruleBasedFilter(vector<Point2f> pcPoints, float maxZ, int numPoints)
         width = dist1;
     }
     // assuming ground = sensor height
-    height = maxZ + sensorHeight;
     // assuming right angle
     area = dist1*dist2;
-    mass = area*height;
-    ratio = length/width;
+    mass = area * maxZ;
+    ratio = length / width;
 
     //start rule based filtering
 #if 0 //zhanghm 20180607 修改
@@ -116,26 +115,22 @@ bool ruleBasedFilter(vector<Point2f> pcPoints, float maxZ, int numPoints)
         return isPromising;
 #endif
 
-    if(height > 0.5 && height < tHeightMax)
+    // if(height > 0.1 && height < tHeightMax)
+    // {
+    if(width < tWidthMax && length < tLenMax && area < tAreaMax)
     {
-      if(width > tWidthMin && width < tWidthMax)
-      {
-        if(length > tLenMin && length < tLenMax)
-        {
-          if(area < tAreaMax){
-            if(ratio>1.1 && ratio < 4)
-            {
-              isPromising = true;
-              return isPromising;
-            }
-            else
-            {
-              return false;
-            }
-          }
-        }
-      }
+        // if(ratio < 6.0f)
+        // {
+        //     isPromising = true;
+        //     return isPromising;
+        // }
+        // else
+        // {
+        //     return false;
+        // }
+        return true;
     }
+    // }
     else
         return isPromising;
 }
@@ -424,7 +419,7 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             Vertex vet(k_1, maxDy - k_1 * maxDx);
             // 存储较长边点云集合
             // vector<point> ptSet;
-            vector<Point2f> ptSet;
+            vector<Point2f> ptSet, ptSet2;
             float distA = (maxMy- maxDy) * (maxMy - maxDy) + (maxMx - maxDx) * (maxMx - maxDx);
             float distB = (minMy- maxDy) * (minMy - maxDy) + (minMx - maxDx) * (minMx - maxDx);
 
@@ -453,7 +448,13 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
                     // ptSet.emplace_back(clusterTmp[i]);
                     ptSet.emplace_back(Point2f(clusterTmp[i].x(), clusterTmp[i].y()));
                 }
+                // else
+                // {
+                //     ptSet2.emplace_back(Point2f(clusterTmp[i].x(), clusterTmp[i].y()));
+                // }
             }
+
+            // 如果这条边的点数太少占据总 lShapePoint 点数的百分之 30 不到， 那么就换一条边
 
             // fprintf(stderr, "pointSetSize : %d\n", ptSet.size());  
 
@@ -461,14 +462,25 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             // float rectK = fitLine(ptSet);
             // 使用 RANSAC 与噪声干扰有关系
             float rectK;
-            if (ptSet.size() >= 8)
-                rectK = fitLineRansac(ptSet, 50, 0.08);
+            // if (ptSet.size() > ptSet2.size() * 0.4)
+            // {
+            if (ptSet.size() >= 10)
+                rectK = fitLineRansac(ptSet, 100, 0.1);
             else
                 rectK = fitLine(ptSet);
-            // fprintf(stderr, "rectK : %f\n", rectK);  
+                // fprintf(stderr, "rectK : %f\n", rectK);  
+                // 根据方向拟合 bbox 的                
+            // }
+            // else
+            // {
+            //     if (ptSet2.size() >= 10)
+            //         rectK = fitLineRansac(ptSet2, 100, 0.13);
+            //     else
+            //         rectK = fitLine(ptSet2);
+            //     // fprintf(stderr, "rectK : %f\n", rectK);                  
+            // }
             // 根据方向拟合 bbox 的
             fitRect(rectK, *clusteredPoints[iCluster],  pcPoints);
-            
             // fprintf(stderr, "pcPoints:\n");
             // for (int idx = 0; idx < 4; ++idx)
             //     fprintf(stderr, "(%f, %f)\n", pcPoints[idx].x, pcPoints[idx].y);
@@ -504,6 +516,15 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
         }
 
         // make pcl cloud for 3d bounding box
+        
+        bool saveIt = ruleBasedFilter(pcPoints, 
+            clusteredPoints[iCluster]->maxZ - clusteredPoints[iCluster]->minZ, 
+            clusteredPoints[iCluster]->size());
+        
+        // 不进行保存 bbox
+        if (!saveIt)
+            continue;   
+
         Cloud::Ptr oneBboxPtr(new Cloud);
         for(int pclH = 0; pclH < 2; pclH++)
         {//底面四个点,上面四个点
@@ -817,9 +838,18 @@ void getOrientedBBox(const vector<Cloud::Ptr> & clusteredPoints,
             }
         }
         
+        bool saveIt = ruleBasedFilter(pcPoints, 
+        clusteredPoints[idx]->maxZ - clusteredPoints[idx]->minZ, 
+        clusteredPoints[idx]->size());
+        
+        // 不进行保存 bbox
+        if (!saveIt)
+            continue;   
+
         Cloud::Ptr oneBboxPtr(new Cloud);
         for(int pclH = 0; pclH < 2; pclH++)
-        {//底面四个点,上面四个点
+        {
+            // 底面四个点,上面四个点
             for(int pclP = 0; pclP < 4; pclP++)
             {
                 point o;

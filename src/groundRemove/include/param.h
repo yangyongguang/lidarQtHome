@@ -47,7 +47,7 @@ public:
     // size_t numBeam = static_cast<size_t>((end_angle - start_angle) / M_PI * 180 / 0.4);
     float vehicle_step = (end_angle - start_angle) / static_cast<double>(numBeam);
     // size_t numCols = 870;
-    size_t numCols = 1500;
+    size_t numCols = 4500;
     // size_t numCols = 4500;
     size_t numRows = 64;
     // size_t numRows = static_cast<size_t>((end_angle - start_angle) / M_PI * 180 / 0.4);
