@@ -335,6 +335,8 @@ QFileDialog
 -
 QTextCursor
 -
+QComboBox
+-
 utils.h
 /home/yyg/code/lidarCode/src/qt/widgets/utils.h
 groundRemove/include/cloud.h
@@ -1852,6 +1854,10 @@ qbuttongroup.h
 qcheckbox.h
 /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qcheckbox.h
 
+/opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QComboBox
+qcombobox.h
+/opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qcombobox.h
+
 /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QDesktopWidget
 qdesktopwidget.h
 /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qdesktopwidget.h
@@ -2022,6 +2028,16 @@ QtCore/qobject.h
 
 /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qcheckbox.h
 QtWidgets/qabstractbutton.h
+-
+
+/opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qcombobox.h
+QtWidgets/qwidget.h
+-
+QtWidgets/qabstractitemdelegate.h
+-
+QtCore/qabstractitemmodel.h
+-
+QtCore/qvariant.h
 -
 
 /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qdesktopwidget.h

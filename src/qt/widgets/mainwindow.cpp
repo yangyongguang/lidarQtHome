@@ -143,6 +143,7 @@ MainWindow::MainWindow(QWidget *parent):
 
     // dockshow_depth_image->close();
     // dockshow_depth_image2->close();
+
 }
 
 MainWindow::~MainWindow()
@@ -151,6 +152,13 @@ MainWindow::~MainWindow()
     delete infoTextEdit;
     delete dock_Image;
     delete imgLabel;
+    delete ObjSelectCB;
+    delete dockshow_depth_image;
+    delete dock_cluster_image;
+    delete infoTextEdit;
+    delete cluster_image;
+    delete depth_image;
+    delete depth_image2;
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event) 
@@ -302,7 +310,8 @@ void MainWindow::onSliderMovedTo(int cloud_number)
     groundRemove.scanCallBack(*_cloud, *ground_cloud, *obstacle_cloud);
     // fprintf(stderr, "------------------1\n");
     // 获取选择的 ID
-    if (_viewer->selection.size())
+    // if (_viewer->selection.size())
+    if (0)
     {
         fprintf(stderr, "_viewer->selection has size :%d\n", _viewer->selection.size());
         for (const int & elem : _viewer->selection)
@@ -349,6 +358,8 @@ void MainWindow::onSliderMovedTo(int cloud_number)
     std::vector<Cloud::Ptr> bboxPts;  // minAre + pca
     std::vector<Cloud::Ptr> bboxPts2; // L_shape
     Cloud::Ptr markPoints(new Cloud); // 标记的点
+
+    
     if (ui->clusterCB->isChecked())
     {
         std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
@@ -381,14 +392,25 @@ void MainWindow::onSliderMovedTo(int cloud_number)
             // fprintf(stderr, "------------------3\n");
             std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
             // L_shape bbox
-            getBBox(clusters, bboxPts, markPoints);
+            // 找出 选择的 BBox
+            int bboxDebugId = -1;
+            if (_viewer->bboxSelection.size() > 0)
+            {
+                bboxDebugId = bboxToCluster[_viewer->bboxSelection[0]];
+            }
+            getBBox(clusters, bboxPts, markPoints, bboxToCluster, bboxDebugId);
             getOrientedBBox(clusters, bboxPts2);
             std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> fp_ms = end - start;
             std::cout << "boundingbox took about " << fp_ms.count() << " ms" << std::endl;            
             // fprintf(stderr, "------------------4\n");
-            _viewer->AddDrawable(DrawableBBox::FromCloud(bboxPts, true));
-            _viewer->AddDrawable(DrawableBBox::FromCloud(bboxPts2, true, 1));
+            // fprintf(stderr, "drawSelectedBBox objects size : %d\n", _viewer->drawSelectableBBox.objects.size());
+            // _viewer->AddDrawable(DrawableBBox::FromCloud(bboxPts, true));
+            _viewer->drawSelectableBBox = DrawSelectAbleBBox(bboxPts, true);
+            // fprintf(stderr, "drawSelectedBBox objects size : %d\n", _viewer->drawSelectableBBox.objects.size());
+            _viewer->AddDrawable(DrawSelectAbleBBox::FromCloud(bboxPts, true), "DrawSelectAbleBBox");
+            // 对比方法 bbox
+            // _viewer->AddDrawable(DrawableBBox::FromCloud(bboxPts2, true, 1));
             _viewer->AddDrawable(DrawableCloud::FromCloud(markPoints, Eigen::Vector3f(0.0f, 1.0f, 0.2f),
                      GLfloat(6)),"L_shape markPoints");
         }
@@ -416,8 +438,8 @@ void MainWindow::onSliderMovedTo(int cloud_number)
 
 
     // fprintf(stderr, "numClister :%d\n", cluster.getNumCluster());
-    // _viewer->drawSelectableCloud = DrawSelectAbleCloud(_cloud);
-    _viewer->drawSelectableCloud = DrawSelectAbleCloud(obstacle_cloud);
+    _viewer->drawSelectableCloud = DrawSelectAbleCloud(_cloud);
+
     if (ui->cloudCB->isChecked())
     {
         // _viewer->AddDrawable(DrawableCloud::FromCloud(_cloud));
@@ -636,8 +658,11 @@ void MainWindow::onParamSet()
 void MainWindow::onClearSelection()
 {
     // fprintf(stderr, "current elsection id :\n");
-    // for (auto & elem : _viewer->selection) fprintf(stderr, "\n%d ",elem);
+    // for (auto & elem : _viewer->selection) 
+    //     fprintf(stderr, "\n%d ", elem);
     _viewer->selection.clear();
+    _viewer->bboxSelection.clear();
+    bboxToCluster.clear();
 }
 
 

@@ -12,6 +12,7 @@
 #include <QString>
 #include <QFileDialog>
 #include <QTextCursor>
+#include <QComboBox>
 
 #include "utils.h"
 #include "groundRemove/include/cloud.h"
@@ -68,6 +69,8 @@ public:
     float angle_threshold;
     bool depthImagefilter;
     size_t girdImageResize;
+
+    std::unordered_map<int, int> bboxToCluster;
 protected:
     void keyPressEvent(QKeyEvent *event) override;
     virtual void resizeEvent(QResizeEvent *event) override;
@@ -120,6 +123,8 @@ private:
     // std::unique_ptr<QGraphicsScene> _scene = nullptr;
     // std::unique_ptr<QGraphicsView> _graphView = nullptr;
 
+    // 可供选择的 对象
+    QComboBox *ObjSelectCB;
     QDockWidget *dock_Image;
     QDockWidget *dock_cluster_image;
     QDockWidget *dockshow_depth_image;

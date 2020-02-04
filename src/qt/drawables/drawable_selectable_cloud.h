@@ -32,4 +32,26 @@ private:
     Eigen::Vector3f _color = Eigen::Vector3f::Ones();
 
 };
+
+// 可选择的 BBox
+class DrawSelectAbleBBox: public Drawable
+{
+public:
+    using Ptr = std::shared_ptr<DrawSelectAbleBBox>;
+    DrawSelectAbleBBox() {}
+    explicit DrawSelectAbleBBox(const std::vector<Cloud::Ptr> & posVec, bool drawZAxis = true);
+    
+    void Draw() const override;
+
+    ~DrawSelectAbleBBox() override {}    
+    static DrawSelectAbleBBox::Prt FromCloud(
+                        const std::vector<Cloud::Ptr> & posVec, 
+                        bool drawZAxis = true);
+
+    std::vector<Object::Ptr> objects;   
+private:
+    std::vector<Cloud::Ptr> rectPosVec;
+    bool _drawZAxis;
+    // int _color;
+};
 #endif

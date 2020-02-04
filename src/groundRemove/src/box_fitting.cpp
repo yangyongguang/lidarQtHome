@@ -290,10 +290,18 @@ void getBoundingBox(const vector<Cloud::Ptr> & clusteredPoints,
 
 void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
                     vector<Cloud::Ptr>& bbPoints,
-                    Cloud::Ptr & markPoints)
+                    Cloud::Ptr & markPoints,
+                    std::unordered_map<int, int> & bboxToCluster,
+                    const int & debugID)
 {
+    int numCorrect = 0;
+    // BBox 是从 bbPoints 中保留出来的， 所以根据有效的 BBox 的数目可以推出来使用的是那个 ID 跟踪的
+    fprintf(stderr, "current choose iCluster %d\n", debugID);
     for (size_t iCluster = 0; iCluster < clusteredPoints.size(); iCluster++)
     {   
+        bool debugBool = false;
+        if (iCluster == debugID)
+            debugBool = true;
         //遍历每个物体
         // Check lidar points number
         Cloud clusterTmp;
@@ -307,7 +315,10 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
         int numPoints = clusterTmp.size();
         // 点数太少， minAreRect 不能调用
         if (numPoints == 0)
+        {
+            // 有被删除过的聚类
             continue;
+        }
         // vector<Point> pointVec(numPoints);
         vector<cv::Point2f> pointVec(numPoints);
         vector<Point2f> pcPoints(4);
@@ -354,7 +365,7 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
         // L shape fitting parameters
         float xDist = maxMx - minMx;
         float yDist = maxMy - minMy;
-        float slopeDist = sqrt(xDist*xDist + yDist*yDist);//最大最小斜率对应的两点之间的距离
+        float slopeDist = sqrt(xDist * xDist + yDist * yDist);//最大最小斜率对应的两点之间的距离
         float slope = (maxMy - minMy)/(maxMx - minMx);
 
         // random variable
@@ -369,13 +380,17 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
         {
             float maxDist = 0;
             float maxDx, maxDy;
+            bool findDPoint = false;
 
             // 80 random points, get max distance
             if (numPoints < ramPoints)
                 sizePoint = numPoints;
             else
                 sizePoint = ramPoints;
-
+            
+            // float distToOrigin = -slope * maxMx / sqrt(slope * slope + 1);            
+            float interceptB = maxMy - slope * maxMx;
+            float distToOrigin = interceptB / sqrt(slope * slope + 1);
             for(int i = 0; i < sizePoint; i++)
             {
                 size_t pInd = randPoints(mt);
@@ -386,13 +401,31 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
                 float yI = clusterTmp[pInd].y();
 
                 // from equation of distance between line and point
-                float dist = abs(slope*xI-1*yI+maxMy-slope*maxMx)/sqrt(slope*slope + 1);
-                if(dist > maxDist) 
+                float dist = (slope * xI - yI + interceptB) / sqrt(slope * slope + 1);
+                float distAbs = std::abs(dist);
+
+                if (debugBool)
                 {
-                    maxDist = dist;
+                    fprintf(stderr, "dist: %f, distToOrigin: %f, slope: %f, b:%f\n",
+                        dist, distToOrigin, slope, interceptB);
+                }
+
+                // 与原点不再同一侧， 不考虑其为 拐点
+                if (dist * distToOrigin < 0.0f)
+                    continue;
+                if(distAbs > maxDist) 
+                {
+                    findDPoint = true;
+                    maxDist = distAbs;
                     maxDx = xI;
                     maxDy = yI;
                 }
+            }
+
+            if (!findDPoint)
+            {
+                maxDx = (maxMx + minMx) / 2;
+                maxDy = (maxMy + minMy) / 2;
             }
 
             // for center of gravity
@@ -404,16 +437,19 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             float maxMvecY = maxMy - maxDy;
             float minMvecX = minMx - maxDx;
             float minMvecY = minMy - maxDy;
-            float lastX = maxDx + maxMvecX + minMvecX;
-            float lastY = maxDy + maxMvecY + minMvecY;
+            // float lastX = maxDx + maxMvecX + minMvecX;
+            // float lastY = maxDy + maxMvecY + minMvecY;
 
             // 添加三个可视化点
+            
             markPoints->emplace_back(point(maxDx, maxDy, 0.0f));
             markPoints->emplace_back(point(maxMx, maxMy, 0.0f));
             markPoints->emplace_back(point(minMx, minMy, 0.0f));
             // 求 垂线 俩边的点集合
             float k = (maxMvecY - minMvecY) / (maxMvecX - minMvecX + 1e-6);
-            float k_1 = -1 / (k_1 + 1e-6);
+            // 这里出现过一个重大的 bug 求斜率时候， 写错了
+            // float k_1 = -1 / (k_1 + 1e-6);
+            float k_1 = -1 / (k + 1e-6);
             
             // 垂直线段
             Vertex vet(k_1, maxDy - k_1 * maxDx);
@@ -445,7 +481,11 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
                 float dist = k_1 * clusterTmp[i].x() + vet.y - clusterTmp[i].y();
                 if (dist * lessZero >= 0)
                 {
+                    if (debugBool)
+                        fprintf(stderr, "K_1: %f,  dist : %f,  lessZero :%f \n", k_1, dist, lessZero);
                     // ptSet.emplace_back(clusterTmp[i]);
+                    if (debugBool)
+                        markPoints->emplace_back(clusterTmp[i]);
                     ptSet.emplace_back(Point2f(clusterTmp[i].x(), clusterTmp[i].y()));
                 }
                 // else
@@ -464,8 +504,11 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             float rectK;
             // if (ptSet.size() > ptSet2.size() * 0.4)
             // {
+            if (iCluster == debugID)
+                fprintf(stderr, "ptSet size : %d\n", ptSet.size());
+
             if (ptSet.size() >= 10)
-                rectK = fitLineRansac(ptSet, 100, 0.1);
+                rectK = fitLineRansac(ptSet, 100, 0.09, debugBool);
             else
                 rectK = fitLine(ptSet);
                 // fprintf(stderr, "rectK : %f\n", rectK);  
@@ -481,6 +524,8 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             // }
             // 根据方向拟合 bbox 的
             fitRect(rectK, *clusteredPoints[iCluster],  pcPoints);
+            if (debugBool)
+                fprintf(stderr, "\ncurrent rectK : %f\n", rectK);
             // fprintf(stderr, "pcPoints:\n");
             // for (int idx = 0; idx < 4; ++idx)
             //     fprintf(stderr, "(%f, %f)\n", pcPoints[idx].x, pcPoints[idx].y);
@@ -541,6 +586,9 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             }
         }
         bbPoints.emplace_back(oneBboxPtr);
+        // 正确的 bbox 新增一
+        bboxToCluster[numCorrect] = iCluster;
+        numCorrect++;
     }
 }
 
@@ -593,19 +641,26 @@ void CloudToVertexs(const Cloud::Ptr & cloud,
 // ransac 算法
 float fitLineRansac(const vector<cv::Point2f>& clouds, 
                     const int & num_iterations,
-                    const float & tolerance)
+                    const float & tolerance,
+                    const bool & debug)
 {
+    if (debug)
+        fprintf(stderr, "num %d point fit ransac line \n", clouds.size());
     int max_num_fit = 0;
     Point2f best_plane(0.0f, 0.0f);
+    mt19937_64 mt(0);
+    uniform_int_distribution<> randPoints(0, clouds.size() - 1);
     for(int i = 0; i < num_iterations; ++i) 
     {
         // -- Get two random points.
         Point2f p;
-        int idx0 = rand() % clouds.size();
+        // int idx0 = rand() % clouds.size();
+        size_t idx0 = randPoints(mt);
         p = clouds[idx0];
 
         Point2f q;
-        int idx1 = rand() % clouds.size();
+        // int idx1 = rand() % clouds.size();
+        size_t idx1 = randPoints(mt);
         q = clouds[idx1];
 
         // 选择了相同的点
@@ -648,6 +703,8 @@ float fitLineRansac(const vector<cv::Point2f>& clouds,
     }
     // return best_plane;
     // 返回 k
+    if (debug)
+        fprintf(stderr, "res line %f, max_num_fit %d\n", -1 * best_plane.x / best_plane.y, max_num_fit);
     return -1 * best_plane.x / best_plane.y;
 }
 

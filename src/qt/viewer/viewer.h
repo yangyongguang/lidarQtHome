@@ -46,7 +46,9 @@ protected:
     
 public:
     DrawSelectAbleCloud drawSelectableCloud;
+    DrawSelectAbleBBox drawSelectableBBox;
     std::vector<int> selection;
+    std::vector<int> bboxSelection;
 private:
     std::vector<Drawable::Prt> _drawables;
     mutable std::mutex _cloud_mutex;

@@ -271,6 +271,8 @@ QFileDialog
 -
 QTextCursor
 -
+QComboBox
+-
 utils.h
 ../src/qt/widgets/utils.h
 groundRemove/include/cloud.h
@@ -343,6 +345,16 @@ qscopedpointer.h
 /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/QString
 qstring.h
 /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/qstring.h
+
+/opt/Qt5.6.0/5.6/gcc_64/include/QtCore/qabstractitemmodel.h
+QtCore/qvariant.h
+-
+QtCore/qobject.h
+-
+QtCore/qhash.h
+-
+QtCore/qvector.h
+-
 
 /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/qalgorithms.h
 QtCore/qglobal.h
@@ -850,6 +862,18 @@ QtCore/qatomic.h
 QtCore/qglobal.h
 -
 QtCore/qstring.h
+-
+
+/opt/Qt5.6.0/5.6/gcc_64/include/QtCore/qregularexpression.h
+QtCore/qglobal.h
+-
+QtCore/qstring.h
+-
+QtCore/qstringlist.h
+-
+QtCore/qshareddata.h
+-
+QtCore/qvariant.h
 -
 
 /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/qscopedpointer.h
@@ -1586,6 +1610,18 @@ QtCore/qpoint.h
 QtCore/qrect.h
 -
 
+/opt/Qt5.6.0/5.6/gcc_64/include/QtGui/qvalidator.h
+QtCore/qobject.h
+-
+QtCore/qstring.h
+-
+QtCore/qregexp.h
+-
+QtCore/qregularexpression.h
+-
+QtCore/qlocale.h
+-
+
 /opt/Qt5.6.0/5.6/gcc_64/include/QtGui/qvector2d.h
 QtCore/qpoint.h
 -
@@ -1609,6 +1645,10 @@ QtCore/qglobal.h
 /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QApplication
 qapplication.h
 /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qapplication.h
+
+/opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QComboBox
+qcombobox.h
+/opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qcombobox.h
 
 /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QDesktopWidget
 qdesktopwidget.h
@@ -1650,8 +1690,24 @@ qtextedit.h
 qwidget.h
 /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qwidget.h
 
+/opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qabstractitemdelegate.h
+QtCore/qobject.h
+-
+QtWidgets/qstyleoption.h
+-
+
 /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qabstractscrollarea.h
 QtWidgets/qframe.h
+-
+
+/opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qabstractslider.h
+QtWidgets/qwidget.h
+-
+
+/opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qabstractspinbox.h
+QtWidgets/qwidget.h
+-
+QtGui/qvalidator.h
 -
 
 /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qapplication.h
@@ -1668,6 +1724,16 @@ QtGui/qcursor.h
 QtWidgets/qdesktopwidget.h
 -
 QtGui/qguiapplication.h
+-
+
+/opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qcombobox.h
+QtWidgets/qwidget.h
+-
+QtWidgets/qabstractitemdelegate.h
+-
+QtCore/qabstractitemmodel.h
+-
+QtCore/qvariant.h
 -
 
 /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qdesktopwidget.h
@@ -1744,12 +1810,64 @@ QtGui/QSurfaceFormat
 QtGui/qopengl.h
 -
 
+/opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qrubberband.h
+QtWidgets/qwidget.h
+-
+
 /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qscrollarea.h
 QtWidgets/qabstractscrollarea.h
 -
 
 /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qsizepolicy.h
 QtCore/qobject.h
+-
+
+/opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qslider.h
+QtWidgets/qabstractslider.h
+-
+
+/opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qstyle.h
+QtCore/qobject.h
+-
+QtCore/qrect.h
+-
+QtCore/qsize.h
+-
+QtGui/qicon.h
+-
+QtGui/qpixmap.h
+-
+QtGui/qpalette.h
+-
+QtWidgets/qsizepolicy.h
+-
+
+/opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qstyleoption.h
+QtCore/qvariant.h
+-
+QtWidgets/qabstractspinbox.h
+-
+QtGui/qicon.h
+-
+QtGui/qmatrix.h
+-
+QtWidgets/qslider.h
+-
+QtWidgets/qstyle.h
+-
+QtWidgets/qtabbar.h
+-
+QtWidgets/qtabwidget.h
+-
+QtWidgets/qrubberband.h
+-
+QtWidgets/qframe.h
+-
+QtCore/qabstractitemmodel.h
+-
+
+/opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qtabbar.h
+QtWidgets/qwidget.h
 -
 
 /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qtabwidget.h

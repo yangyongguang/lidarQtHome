@@ -45,7 +45,9 @@ void getBoundingBox(const vector<Cloud::Ptr> & clusteredPoints,
 // 使用原始点做的
 void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
                     vector<Cloud::Ptr> & bbPoints,
-                    Cloud::Ptr & markPoints);        
+                    Cloud::Ptr & markPoints,
+                    std::unordered_map<int, int> & bboxToCluster,
+                    const int & debugID = -1);        
 // 论文
 // An Orientation Corrected Bounding Box Fit Based on the Convex Hull under Real Time Constraintes
 // std::vector<Vertex> CloudToVertexs(const Cloud::Ptr & cloud, float & minZ, float & maxZ);
@@ -61,7 +63,8 @@ float fitLine(const std::vector<cv::Point2f> & points);
 // RANSAC 算法拟合
 float fitLineRansac(const vector<cv::Point2f>& clouds, 
                     const int & num_iterations,
-                    const float & tolerance);
+                    const float & tolerance,
+                    const bool & debug = false);
 
 void getOrientedBBox(const vector<Cloud::Ptr> & clusteredPoints,
                     vector<Cloud::Ptr> & bbPoints);    

@@ -650,6 +650,7 @@ src/qt/widgets/CMakeFiles/qt_widgets.dir/mainwindow.cpp.o
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QApplication
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QButtonGroup
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QCheckBox
+ /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QComboBox
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QDesktopWidget
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QDockWidget
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QDoubleSpinBox
@@ -683,6 +684,7 @@ src/qt/widgets/CMakeFiles/qt_widgets.dir/mainwindow.cpp.o
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qboxlayout.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qbuttongroup.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qcheckbox.h
+ /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qcombobox.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qdesktopwidget.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qdialog.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qdockwidget.h
@@ -1619,6 +1621,7 @@ src/qt/widgets/CMakeFiles/qt_widgets.dir/moc_mainwindow.cpp.o
  /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/QRect
  /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/QScopedPointer
  /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/QString
+ /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/qabstractitemmodel.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/qalgorithms.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/qarraydata.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/qatomic.h
@@ -1677,6 +1680,7 @@ src/qt/widgets/CMakeFiles/qt_widgets.dir/moc_mainwindow.cpp.o
  /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/qrect.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/qrefcount.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/qregexp.h
+ /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/qregularexpression.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/qscopedpointer.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/qset.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/qshareddata.h
@@ -1742,9 +1746,11 @@ src/qt/widgets/CMakeFiles/qt_widgets.dir/moc_mainwindow.cpp.o
  /opt/Qt5.6.0/5.6/gcc_64/include/QtGui/qtextoption.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtGui/qtouchdevice.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtGui/qtransform.h
+ /opt/Qt5.6.0/5.6/gcc_64/include/QtGui/qvalidator.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtGui/qvector2d.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtGui/qwindowdefs.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtGui/qwindowdefs_win.h
+ /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QComboBox
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QDesktopWidget
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QDockWidget
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QFileDialog
@@ -1755,7 +1761,11 @@ src/qt/widgets/CMakeFiles/qt_widgets.dir/moc_mainwindow.cpp.o
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QOpenGLWidget
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QTextEdit
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/QWidget
+ /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qabstractitemdelegate.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qabstractscrollarea.h
+ /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qabstractslider.h
+ /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qabstractspinbox.h
+ /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qcombobox.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qdesktopwidget.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qdialog.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qdockwidget.h
@@ -1766,8 +1776,13 @@ src/qt/widgets/CMakeFiles/qt_widgets.dir/moc_mainwindow.cpp.o
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qlabel.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qmainwindow.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qopenglwidget.h
+ /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qrubberband.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qscrollarea.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qsizepolicy.h
+ /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qslider.h
+ /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qstyle.h
+ /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qstyleoption.h
+ /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qtabbar.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qtabwidget.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qtextedit.h
  /opt/Qt5.6.0/5.6/gcc_64/include/QtWidgets/qwidget.h

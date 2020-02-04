@@ -33,14 +33,34 @@ void Viewer::draw()
     glEnd();
     //
     // qDebug() << "window clicked .\n" << endl;
-    // fprintf(stderr, "Viewer::draw()\n");
+    // fprintf(stderr, "Viewer::draw()\n");    
+    // fprintf(stderr, "\n\n\ncloud total number : %d\n", drawSelectableCloud.objects.size());
+    // fprintf(stderr, "cloud selected id :\n");
+    // for (auto it = selection.begin(); it != selection.end(); ++it)
+    // {
+    //     fprintf(stderr, "%d ", *it);
+    // }
+
+    // fprintf(stderr, "bbox selected id :\n");
+    // for (auto it = bboxSelection.begin(); it != bboxSelection.end(); ++it)
+    // {
+    //     fprintf(stderr, "%d ", *it);
+    // }
+
     glPointSize(4);
     glColor3f(0.9f, 0.3f, 0.3f);
-    if (selection.size() != 0 && drawSelectableCloud.objects.size() != 0)
+    size_t CloudNum = drawSelectableCloud.objects.size();
+    size_t BBoxNum = drawSelectableBBox.objects.size();
+    if (selection.size() != 0 && CloudNum != 0)
     {
         for (auto it = selection.begin(); it != selection.end(); ++it)
         {
-            drawSelectableCloud.objects[*it]->draw();
+            if (*it < CloudNum)
+                drawSelectableCloud.objects[*it]->draw();
+            else if (CloudNum <= (*it) && (*it) <= (CloudNum + BBoxNum))
+            {
+                drawSelectableBBox.objects[*it - CloudNum]->draw();
+            }
         }
     }
 
@@ -92,12 +112,30 @@ void Viewer::drawWithNames()
         int idx = 0;
         for (auto & elem : drawSelectableCloud.objects)
         {
+            // fprintf(stderr, "Cloud pushName with %d\n", idx);
             glPushName(idx);
             elem->draw();
             glPopName();
             ++idx;
         }
     }
+
+    // 对象减去点云对象数目， 等于 bbox 的 ID
+    // fprintf(stderr, "drawSelectableBBox.objects.size : %d\n", drawSelectableBBox.objects.size());
+    if(drawSelectableBBox.objects.size() != 0)
+    {
+        int idx = drawSelectableCloud.objects.size();
+        for (auto & elem : drawSelectableBBox.objects)
+        {
+            // fprintf(stderr, "BBox pushName with %d\n", idx);
+            glPushName(idx);
+            elem->draw();
+            glPopName();
+            ++idx;
+        }
+    }
+
+    
 
 }
 
@@ -231,11 +269,19 @@ void Viewer::addIdToSelection(int id)
 {
     // if (!selection.contains(id))
     //     selection.push_back(id);
-   auto it = std::find(selection.begin(), selection.end(), id);
-   if (it == selection.end())
-   {
-       selection.emplace_back(id);
-   }
+    int cloudNum = drawSelectableCloud.objects.size();
+    int bboxNum = drawSelectableBBox.objects.size();
+    auto it = std::find(selection.begin(), selection.end(), id);
+    if (it == selection.end())
+    {
+        if (id < cloudNum)
+            selection.emplace_back(id);
+        if (id >= cloudNum && 
+            id < (cloudNum + bboxNum))
+        {
+            bboxSelection.emplace_back(id - cloudNum);
+        }
+    }
 }
 
 

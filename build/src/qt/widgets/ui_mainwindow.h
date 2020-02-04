@@ -15,6 +15,7 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QCheckBox>
+#include <QtWidgets/QComboBox>
 #include <QtWidgets/QDoubleSpinBox>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
@@ -95,6 +96,8 @@ public:
     QPlainTextEdit *paramPTE;
     QHBoxLayout *horizontalLayout_13;
     QPushButton *updatePB;
+    QLabel *label_13;
+    QComboBox *ObjectSelectCB;
     QPushButton *clearSelectionPB;
     QPushButton *resetBT;
     QPushButton *quit;
@@ -109,7 +112,7 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
-        MainWindow->resize(1700, 1066);
+        MainWindow->resize(741, 652);
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         verticalLayout_2 = new QVBoxLayout(centralWidget);
@@ -152,7 +155,7 @@ public:
         choose->setLocale(QLocale(QLocale::English, QLocale::UnitedStates));
         layoutWidget_3 = new QWidget(choose);
         layoutWidget_3->setObjectName(QStringLiteral("layoutWidget_3"));
-        layoutWidget_3->setGeometry(QRect(0, 0, 271, 280));
+        layoutWidget_3->setGeometry(QRect(0, 0, 289, 311));
         verticalLayout_3 = new QVBoxLayout(layoutWidget_3);
         verticalLayout_3->setSpacing(5);
         verticalLayout_3->setContentsMargins(11, 11, 11, 11);
@@ -427,6 +430,21 @@ public:
 
         horizontalLayout_13->addWidget(updatePB);
 
+        label_13 = new QLabel(centralWidget);
+        label_13->setObjectName(QStringLiteral("label_13"));
+        QSizePolicy sizePolicy4(QSizePolicy::Maximum, QSizePolicy::Preferred);
+        sizePolicy4.setHorizontalStretch(0);
+        sizePolicy4.setVerticalStretch(0);
+        sizePolicy4.setHeightForWidth(label_13->sizePolicy().hasHeightForWidth());
+        label_13->setSizePolicy(sizePolicy4);
+
+        horizontalLayout_13->addWidget(label_13);
+
+        ObjectSelectCB = new QComboBox(centralWidget);
+        ObjectSelectCB->setObjectName(QStringLiteral("ObjectSelectCB"));
+
+        horizontalLayout_13->addWidget(ObjectSelectCB);
+
         clearSelectionPB = new QPushButton(centralWidget);
         clearSelectionPB->setObjectName(QStringLiteral("clearSelectionPB"));
 
@@ -512,7 +530,7 @@ public:
         lineCB->setText(QApplication::translate("MainWindow", "      line       ", 0));
         label_11->setText(QApplication::translate("MainWindow", "          bbox     ", 0));
         bboxCB->setText(QApplication::translate("MainWindow", "     bbox      ", 0));
-        label_12->setText(QApplication::translate("MainWindow", "        voxels     ", 0));
+        label_12->setText(QApplication::translate("MainWindow", "        voxel     ", 0));
         voxelCB->setText(QApplication::translate("MainWindow", "    voxels    ", 0));
         label_9->setText(QApplication::translate("MainWindow", "       gridNum    ", 0));
         infoTab->setTabText(infoTab->indexOf(choose), QApplication::translate("MainWindow", "\351\241\265", 0));
@@ -556,6 +574,7 @@ public:
 "", 0));
         infoTab->setTabText(infoTab->indexOf(tab), QApplication::translate("MainWindow", "\351\241\265", 0));
         updatePB->setText(QApplication::translate("MainWindow", "update", 0));
+        label_13->setText(QApplication::translate("MainWindow", "Object:", 0));
         clearSelectionPB->setText(QApplication::translate("MainWindow", "clearSelection", 0));
         resetBT->setText(QApplication::translate("MainWindow", "reset", 0));
         quit->setText(QApplication::translate("MainWindow", "quit", 0));

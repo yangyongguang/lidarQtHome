@@ -62,3 +62,90 @@ DrawSelectAbleCloud::Ptr DrawSelectAbleCloud::FromCloud(const Cloud::ConstPtr& c
     return std::make_shared<DrawSelectAbleCloud>(DrawSelectAbleCloud(cloud, color, pointSize));
 }
 
+// selected BBox
+DrawSelectAbleBBox::DrawSelectAbleBBox(const std::vector<Cloud::Ptr> & posVec, bool drawZAxis)
+{
+    rectPosVec.assign(posVec.begin(), posVec.end());
+    _drawZAxis = drawZAxis;
+
+    objects.clear();
+    // 构造对象
+    for (const auto & rect : rectPosVec)
+    {
+        point centerPoint;
+        for (int idx = 0; idx < 4; ++idx)
+        {
+            centerPoint.x() += (*rect)[idx].x();
+            centerPoint.y() += (*rect)[idx].y();
+            centerPoint.z() += (*rect)[idx].z();
+        }
+        // 注意 make_shared 的用法
+        auto obj = std::make_shared<Object>();
+        obj->frame.setPosition(centerPoint.x() / 4, centerPoint.y() / 4, centerPoint.z() / 4);
+        objects.push_back(obj);
+    }
+}
+
+void DrawSelectAbleBBox::Draw() const
+{
+    point centerPoint;
+    glPushMatrix();
+    glLineWidth(2.0f);
+    for (int iBBox = 0; iBBox < rectPosVec.size(); ++iBBox)
+    {
+        Cloud bboxPt = (*rectPosVec[iBBox]);
+        glColor3f(0.4112f, 0.412f, 0.412f);
+
+        glBegin(GL_QUAD_STRIP);
+        std::array<int, 4> bottom = {1, 2, 0, 3};
+        for (int idx = 0; idx < 4; ++idx)
+        {
+            glVertex3f(bboxPt[bottom[idx]].x(), 
+                        bboxPt[bottom[idx]].y(), 
+                        bboxPt[bottom[idx]].z());
+            centerPoint.x() += bboxPt[bottom[idx]].x();
+            centerPoint.y() += bboxPt[bottom[idx]].y();
+            centerPoint.z() += bboxPt[bottom[idx]].z();
+        }
+        glEnd();
+        // 绘制中心点
+        glColor3f(1.0f, 1.0f, 1.0f);    
+        glBegin(GL_POINT);
+        glVertex3f(centerPoint.x() / 4, centerPoint.y() / 4, centerPoint.z() / 4 + 0.2);
+        glEnd();
+        // --------
+        if (_drawZAxis)
+        {
+            glColor3f(0.80f, 0.745f, 0.448f);             
+            glBegin(GL_LINE_STRIP);
+            for (int idx = 4; idx < 8;++idx)
+            {
+                glVertex3f(bboxPt[idx].x(), bboxPt[idx].y(), bboxPt[idx].z());
+            } 
+            glVertex3f(bboxPt[4].x(), bboxPt[4].y(), bboxPt[4].z());           
+            glEnd();
+
+            // 绘制四边
+            glBegin(GL_LINES);
+            glVertex3f(bboxPt[0].x(), bboxPt[0].y(), bboxPt[0].z());
+            glVertex3f(bboxPt[4].x(), bboxPt[4].y(), bboxPt[4].z());
+
+            glVertex3f(bboxPt[1].x(), bboxPt[1].y(), bboxPt[1].z());
+            glVertex3f(bboxPt[5].x(), bboxPt[5].y(), bboxPt[5].z());
+
+            glVertex3f(bboxPt[2].x(), bboxPt[2].y(), bboxPt[2].z());
+            glVertex3f(bboxPt[6].x(), bboxPt[6].y(), bboxPt[6].z());
+
+            glVertex3f(bboxPt[3].x(), bboxPt[3].y(), bboxPt[3].z());
+            glVertex3f(bboxPt[7].x(), bboxPt[7].y(), bboxPt[7].z());           
+            glEnd();
+        }
+    }
+}
+
+DrawSelectAbleBBox::Prt DrawSelectAbleBBox::FromCloud(
+                        const std::vector<Cloud::Ptr> & posVec, 
+                        bool drawZAxis)
+{
+    return std::make_shared<DrawSelectAbleBBox>(DrawSelectAbleBBox(posVec, drawZAxis));   
+}
