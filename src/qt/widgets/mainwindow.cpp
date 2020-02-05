@@ -103,7 +103,8 @@ MainWindow::MainWindow(QWidget *parent):
     ui->girdNumSB->setSingleStep(10);
     ui->girdNumSB->setRange(10, 1000);
     ui->girdNumSB->setValue(400);
-
+    // 
+    ui->bboxCB->setChecked(true);
     // int showImageGV_x = (ui->CloudViewer->width() - ui->showImageGV->width()) / 2;
     // ui->showImageGV->move(showImageGV_x, 0);
     // _graphView.reset(new QGraphicsView);
@@ -277,6 +278,7 @@ void MainWindow::onSliderMovedTo(int cloud_number)
     
     const auto &file_name = _file_names_velo[cloud_number];
     _cloud = utils::ReadKittiBinCloudByPath(file_name);
+    fprintf(stderr, "\n\n------------------------------>\n");
     infoTextEdit->append("read bin file from: " + QString::fromStdString(file_name));
     infoTextEdit->append("current frame is: " + QString::number(cloud_number));
     moveCursorToEnd();   
@@ -399,7 +401,8 @@ void MainWindow::onSliderMovedTo(int cloud_number)
                 bboxDebugId = bboxToCluster[_viewer->bboxSelection[0]];
             }
             getBBox(clusters, bboxPts, markPoints, bboxToCluster, bboxDebugId);
-            getOrientedBBox(clusters, bboxPts2);
+            // 对比方法
+            // getOrientedBBox(clusters, bboxPts2);
             std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> fp_ms = end - start;
             std::cout << "boundingbox took about " << fp_ms.count() << " ms" << std::endl;            
@@ -412,7 +415,7 @@ void MainWindow::onSliderMovedTo(int cloud_number)
             // 对比方法 bbox
             // _viewer->AddDrawable(DrawableBBox::FromCloud(bboxPts2, true, 1));
             _viewer->AddDrawable(DrawableCloud::FromCloud(markPoints, Eigen::Vector3f(0.0f, 1.0f, 0.2f),
-                     GLfloat(6)),"L_shape markPoints");
+                     GLfloat(2)),"L_shape markPoints");
         }
 
         infoTextEdit->append("number of cluster : " + QString::number(cluster.getNumCluster()));
@@ -542,7 +545,7 @@ void MainWindow::onSliderMovedTo(int cloud_number)
         depth_image2->resize(qimage_depth2.width() * 2, qimage_depth2.height() * 2);
     }
     _viewer->update();
-
+    fprintf(stderr, "<------------------------------\n\n\n");
 }
 
 void MainWindow::moveCursorToEnd()

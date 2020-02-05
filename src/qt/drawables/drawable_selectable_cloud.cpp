@@ -94,20 +94,40 @@ void DrawSelectAbleBBox::Draw() const
     for (int iBBox = 0; iBBox < rectPosVec.size(); ++iBBox)
     {
         Cloud bboxPt = (*rectPosVec[iBBox]);
-        glColor3f(0.4112f, 0.412f, 0.412f);
-
-        glBegin(GL_QUAD_STRIP);
-        std::array<int, 4> bottom = {1, 2, 0, 3};
-        for (int idx = 0; idx < 4; ++idx)
+        if (_drawZAxis)
         {
-            glVertex3f(bboxPt[bottom[idx]].x(), 
-                        bboxPt[bottom[idx]].y(), 
-                        bboxPt[bottom[idx]].z());
-            centerPoint.x() += bboxPt[bottom[idx]].x();
-            centerPoint.y() += bboxPt[bottom[idx]].y();
-            centerPoint.z() += bboxPt[bottom[idx]].z();
+            glColor3f(0.4112f, 0.412f, 0.412f);
+            glBegin(GL_QUAD_STRIP);
+            std::array<int, 4> bottom = {1, 2, 0, 3};
+            for (int idx = 0; idx < 4; ++idx)
+            {
+                glVertex3f(bboxPt[bottom[idx]].x(), 
+                            bboxPt[bottom[idx]].y(), 
+                            bboxPt[bottom[idx]].z());
+                centerPoint.x() += bboxPt[bottom[idx]].x();
+                centerPoint.y() += bboxPt[bottom[idx]].y();
+                centerPoint.z() += bboxPt[bottom[idx]].z();
+            }
+            glEnd();
         }
-        glEnd();
+        else
+        {
+            glColor3f(0.0f, 1.0f, 0.0f); 
+            glBegin(GL_LINE_STRIP);
+            std::array<int, 4> bottom = {0, 1, 2, 3};
+            for (int idx = 0; idx < 4; ++idx)
+            {
+                glVertex3f(bboxPt[bottom[idx]].x(), 
+                            bboxPt[bottom[idx]].y(), 
+                            bboxPt[bottom[idx]].z());
+                centerPoint.x() += bboxPt[bottom[idx]].x();
+                centerPoint.y() += bboxPt[bottom[idx]].y();
+                centerPoint.z() += bboxPt[bottom[idx]].z();
+            }
+            glVertex3f(bboxPt[0].x(), bboxPt[0].y(), bboxPt[0].z());
+            glEnd();
+        }
+        
         // 绘制中心点
         glColor3f(1.0f, 1.0f, 1.0f);    
         glBegin(GL_POINT);
