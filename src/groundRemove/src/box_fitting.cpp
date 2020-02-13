@@ -294,6 +294,7 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
                     std::unordered_map<int, int> & bboxToCluster,
                     const int & debugID)
 {
+    // fprintf(stderr, "getBBox------------------------\n");
     int numCorrect = 0;
     // BBox 是从 bbPoints 中保留出来的， 所以根据有效的 BBox 的数目可以推出来使用的是那个 ID 跟踪的
     // fprintf(stderr, "current choose iCluster %d\n", debugID);

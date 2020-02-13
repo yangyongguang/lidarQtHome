@@ -12,34 +12,42 @@ class params
 public:
     params()
     {
-        // float step = (min_angle_two - start_angle) / 32;
-        // float current_angle = start_angle;
-        // for (int idx = 0; idx < 32; ++idx)
-        // {
-        //     raw_angle_sines.emplace_back(sin(step));
-        //     raw_angle_cosines.emplace_back(cos(step));
-        //     raw_angles.emplace_back(current_angle);
-        //     current_angle += step;            
-        // }
+        // float step1 = (min_angle_one - start_angle) / 32;
+        // float step2 = (end_angle - min_angle_two) / 32;
 
-        // step = (end_angle - min_angle_one) / 32;
-        // current_angle = min_angle_one;
+        float step1 = (min_angle_one - start_angle) / 100;
+        float step2 = (end_angle - min_angle_two) / 60;
+
+        float rad = start_angle;
         // for (int idx = 0; idx < 32; ++idx)
-        // {
-        //     raw_angle_sines.emplace_back(sin(step));
-        //     raw_angle_cosines.emplace_back(cos(step));
-        //     raw_angles.emplace_back(current_angle);
-        //     current_angle += step;
-        // }
-        
-        // for (auto & elem : col_angles)
-        // {
-        //     fprintf(stderr, "%f ", elem / M_PI * 180);
-        // }
+        for (int idx = 0; idx < 100; ++idx)
+        {
+            row_angles.emplace_back(rad);
+            rad += step1;
+        }
+
+        rad = min_angle_two;
+        // for (int idx = 0; idx < 32; ++idx)
+        for (int idx = 0; idx < 60; ++idx)
+        {
+            row_angles.emplace_back(rad);
+            rad += step2;
+        }
+
+        row_angle_sines.clear();
+        row_angle_cosines.clear();
+        for (int idx = 0; idx < 64; ++idx)
+        {
+            row_angle_sines.emplace_back(sin(row_angles[idx]));
+            row_angle_cosines.emplace_back(cos(row_angles[idx]));
+        }
+
+
     }
+
     int numThread = 8;
-    float start_angle = -24.87 / 180 * M_PI;
-    float end_angle = 2.0 / 180 * M_PI;
+    float end_angle = -24.87 / 180 * M_PI;
+    float start_angle = 2.0 / 180 * M_PI;
     float min_angle_one = -8.5 / 180 * M_PI;
     float min_angle_two = -8.87 / 180 * M_PI;
 
@@ -47,8 +55,7 @@ public:
     // size_t numBeam = static_cast<size_t>((end_angle - start_angle) / M_PI * 180 / 0.4);
     float vehicle_step = (end_angle - start_angle) / static_cast<double>(numBeam);
     // size_t numCols = 870;
-    size_t numCols = 4500;
-    // size_t numCols = 4500;
+    size_t numCols = 870;
     size_t numRows = 64;
     // size_t numRows = static_cast<size_t>((end_angle - start_angle) / M_PI * 180 / 0.4);
 
@@ -59,28 +66,26 @@ public:
     float max_dist = 120;
     float dist_length = max_dist - min_dist;
     // HDL_64
-    std::vector<float> raw_angles;
-    std::vector<float> raw_angle_sines;
-    std::vector<float> raw_angle_cosines;
+    std::vector<float> row_angles;
+    std::vector<float> row_angle_sines;
+    std::vector<float> row_angle_cosines;
 
-    /*
-    定义 bbox
-    */
-   
+    // 可视化网格聚类
+    
     // 参数
     // 文件读取参数
     int sequences = 13;
     // int sequences = 21;
     std::string kitti_img_dir = 
-        "/home/yyg/lidarVisualization/data_odometry_color/dataset/sequences/" +
+        "/media/yyg/YYG/lidarVisualization/data_odometry_color/dataset/sequences/" +
             std::to_string(sequences) + "/image_2";
 
     std::string kitti_velo_dir = 
-        "/home/yyg/lidarVisualization/data_odometry_velodyne/dataset/sequences/" +
+        "/media/yyg/YYG/lidarVisualization/data_odometry_velodyne/dataset/sequences/" +
             std::to_string(sequences) + "/velodyne";
 
-    std::string kitti_base_img_dir = "/home/yyg/lidarVisualization/data_odometry_color/dataset/sequences/";
-    std::string kitti_base_velo_dir = "/home/yyg/lidarVisualization/data_odometry_velodyne/dataset/sequences/";
+    std::string kitti_base_img_dir = "/media/yyg/YYG/lidarVisualization/data_odometry_color/dataset/sequences/";
+    std::string kitti_base_velo_dir = "/media/yyg/YYG/lidarVisualization/data_odometry_velodyne/dataset/sequences/";
 
   std::array<std::array<int, 3>, 200> RANDOM_COLORS = 
   {{

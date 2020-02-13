@@ -80,7 +80,7 @@ private:
 
 class Cloud{
 public:
-    Cloud():minZ(999.0f), maxZ(-999.0f){}
+    Cloud():minZ(999.0f), maxZ(-999.0f), maxAngle(-999.0f), minAngle(999){}
     // explicit Cloud(const Cloud & cloud) {}
     // explicit Cloud(Cloud & cloud) {}
     inline size_t size() const { return _points.size(); }
@@ -108,5 +108,9 @@ private:
 public:
     float minZ;
     float maxZ;
+
+    // 最大与最小角度
+    float maxAngle;
+    float minAngle;
 };
 #endif

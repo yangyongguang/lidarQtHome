@@ -56,6 +56,11 @@ public:
     void getLShapePoints(const std::vector<Cloud::Ptr> & clusters, Cloud::Ptr & points);
 
     size_t ColFromAngle(float angle_cols);
+    // 根据每个对象， 平均分配多少份
+    size_t ColFromAngle(float angle_cols, 
+                        float minAngle, 
+                        float maxAngle, 
+                        const size_t & numSegment = 20);
 
 private:
     int numCluster;

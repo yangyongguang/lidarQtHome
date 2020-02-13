@@ -31,6 +31,79 @@ void Viewer::draw()
     glVertex3f(-2.5f, 1.4f, -1.73f);
     glVertex3f(-2.5f, -1.4f, -1.73f);   
     glEnd();
+    //////////------------------   绘制参考线圆线 白色----------------    
+    // float radius = 10;
+    // glColor3f(1.0f, 0.0f, 0.0f);
+    // while (radius <= 100)
+    // {
+    //     /* code */
+    //     drawRefCircle(radius, radius * 100);
+    //     radius += 10;
+    // }
+    //////////--------------------- 绘制距离圆结束  ------------------
+    
+    // ---------------------------- 绘制可视化网格 ----
+    // float radius = 10;
+    // glColor3f(1.0f, 1.0f, 1.0f);
+    // float minSize = 0.2f;
+    // float maxSize = 0.7f;
+
+    // // 每次增加多少
+    // float deta = 0.003f;
+    // float minR = 1.0f;
+    // float maxR = 120.0f;
+
+    // int numGrid = 200;
+    // float radius = minR;
+    // for (int idx = 0; idx < numGrid && radius < maxR; ++idx)
+    // {
+    //     drawRefCircle(radius, int(radius * 100));
+    //     radius += minSize;
+    //     minSize += deta;
+    // }
+
+    // // while (radius <= 100)
+    // // {
+    // //     /* code */
+    // //     drawRefCircle(radius, radius * 100);
+    // //     radius += 10;
+    // // }
+    // //  paramsViewer.row_angles.size()
+    // // float minR = 1.73f / atan(std::abs(paramsViewer.end_angle));
+    // // float maxR = 0;
+    // // for (int idx = 0; idx < paramsViewer.row_angles.size(); ++idx)
+    // // {
+    // //     float angle = paramsViewer.row_angles[idx];
+    // //     // fprintf(stderr, "%f\n", angle);
+    // //     // if (angle > -2 / M_PI * 180)
+    // //     //     continue;
+    // //     if (angle > 0.0f)
+    // //         continue;
+    // //     float d = 1.73f / atan(std::abs(angle));
+    // //     if (d > 130)
+    // //         continue;
+    // //     drawRefCircle(d - minR, int(100 * d));
+    // //     if (d > maxR)
+    // //         maxR = d;
+    // // }
+
+    // // float distCurr = 1.73f / atan(std::abs(paramsViewer.min_angle_two));
+    // // for (int idx = 0; idx < 200; ++idx)
+    // // {
+    // //     distCurr += 0.5f;
+    // //     drawRefCircle(distCurr, int(100 * distCurr));
+    // // }
+    
+    // int numPoints = 600;
+    // glBegin(GL_LINES);
+    // for (int idx = 0; idx < numPoints; ++idx)
+    // {     
+    //     glVertex3f(0.5 * cos(2 * M_PI / numPoints * idx), 0.5 * sin(2 * M_PI / numPoints * idx), -1.73); 
+    //     glVertex3f(maxR * cos(2 * M_PI / numPoints * idx), maxR * sin(2 * M_PI / numPoints * idx), -1.73); 
+    // }
+    // glEnd();
+
+    // ----------------------------------------------
     //
     // qDebug() << "window clicked .\n" << endl;
     // fprintf(stderr, "Viewer::draw()\n");    
@@ -246,6 +319,18 @@ void Viewer::removeIdFromSelection(int id)
 { 
     // selection.removeAll(id); 
     selection.clear();
+}
+
+void Viewer::drawRefCircle(const float & radius, const int & numPoints)
+{
+    // glVertex2f(R*cos(2*Pi/n*i), R*sin(2*Pi/n*i));
+    glLineWidth(1.0f);
+    glBegin(GL_LINE_STRIP);
+    for (size_t idx = 0; idx < numPoints; ++idx)
+    {
+        glVertex3f(radius * cos(2 * M_PI / numPoints * idx), radius * sin(2 * M_PI / numPoints * idx), -1.73);
+    }
+    glEnd();
 }
 
 void Viewer::init()

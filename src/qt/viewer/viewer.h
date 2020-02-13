@@ -14,6 +14,7 @@
 
 #include "object.h"
 #include "drawable_selectable_cloud.h"
+#include "groundRemove/include/param.h"
 
 class Viewer : public QGLViewer
 {
@@ -62,6 +63,7 @@ private:
     void addIdToSelection(int id);
     void removeIdFromSelection(int id);
 
+    void drawRefCircle(const float & radius, const int & numPoints);
     // Different selection modes
     enum SelectionMode { NONE, ADD, REMOVE };
     SelectionMode selectionMode_;
@@ -72,6 +74,7 @@ private:
     
 public:
     bool isFullScreen;
+    params paramsViewer;
 };
 #endif
 

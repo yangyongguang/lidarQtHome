@@ -3,6 +3,7 @@
 
 src/qt/viewer/CMakeFiles/viewer.dir/viewer.cpp.o
  ../src/groundRemove/include/cloud.h
+ ../src/groundRemove/include/param.h
  ../src/qt/drawables/drawable.h
  ../src/qt/drawables/drawable_selectable_cloud.h
  ../src/qt/utils/object.h

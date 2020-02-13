@@ -36,6 +36,8 @@ void DrawableCloud::Draw() const
         auto real_point = point.AsEigenVector();
         // fprintf(stderr, "(%f, %f, %f)\n", real_point.x(), real_point.y(), real_point.z());
         glVertex3f(real_point.x(), real_point.y(), real_point.z());
+        // 二维显示
+        // glVertex3f(real_point.x(), real_point.y(), -1.72f);
     }
     glEnd();
     glPopMatrix();    
@@ -57,6 +59,7 @@ DrawableRect::DrawableRect(const std::vector<Rect2D> & posVec, const float & z)
     hightToGround = z;
 }
 
+// 可视化 voxel 的 Rect 大小
 void DrawableRect::Draw() const
 {
     // fprintf(stderr, "void DrawableRect::Draw() const\n");
@@ -69,14 +72,19 @@ void DrawableRect::Draw() const
     {
         Rect2D rect = rectPosVec[idx];
         float size = rect.getSize();
-        float x1 = rect.x() - size / 2;
-        float y1 = rect.y() - size / 2;
+        // float x1 = rect.x() - size / 2;
+        // float y1 = rect.y() - size / 2;
 
-        float x2 = rect.x() + size / 2;
-        float y2 = rect.y() + size / 2;
+        // float x2 = rect.x() + size / 2;
+        // float y2 = rect.y() + size / 2;
+        float x1 = rect.x();
+        float y1 = rect.y();
+
+        float x2 = rect.x() + size;
+        float y2 = rect.y() + size;
 
         // glRectf(x1, y1, x2, y2);
-        float hight = 0.0f;
+        float hight = -1.73f;
         glBegin(GL_LINE_STRIP);
         glVertex3f(x1, y1, hight);
         glVertex3f(x1, y2, hight);

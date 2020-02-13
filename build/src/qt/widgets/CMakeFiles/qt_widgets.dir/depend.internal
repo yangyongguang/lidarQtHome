@@ -3,6 +3,7 @@
 
 src/qt/widgets/CMakeFiles/qt_widgets.dir/base_viewer_widget.cpp.o
  ../src/groundRemove/include/cloud.h
+ ../src/groundRemove/include/param.h
  ../src/qt/drawables/drawable.h
  ../src/qt/drawables/drawable_selectable_cloud.h
  ../src/qt/utils/object.h
@@ -1125,6 +1126,7 @@ src/qt/widgets/CMakeFiles/qt_widgets.dir/mainwindow.cpp.o
  /usr/local/include/opencv2/videostab/wobble_suppression.hpp
 src/qt/widgets/CMakeFiles/qt_widgets.dir/moc_base_viewer_widget.cpp.o
  ../src/groundRemove/include/cloud.h
+ ../src/groundRemove/include/param.h
  ../src/qt/drawables/drawable.h
  ../src/qt/drawables/drawable_selectable_cloud.h
  ../src/qt/utils/object.h

@@ -100,9 +100,9 @@ MainWindow::MainWindow(QWidget *parent):
     ui->dataSeqSB->setRange(0, 22);
 
     // 创建图像显示窗口
-    ui->girdNumSB->setSingleStep(10);
-    ui->girdNumSB->setRange(10, 1000);
-    ui->girdNumSB->setValue(400);
+    ui->girdNumSB->setSingleStep(60);
+    ui->girdNumSB->setRange(120, 1200);
+    ui->girdNumSB->setValue(360);
     // 
     ui->bboxCB->setChecked(true);
     // int showImageGV_x = (ui->CloudViewer->width() - ui->showImageGV->width()) / 2;
@@ -376,7 +376,7 @@ void MainWindow::onSliderMovedTo(int cloud_number)
         Cloud::Ptr lShapePoints (new Cloud);
         cluster.getLShapePoints(clusters, lShapePoints);
         Eigen::Vector3f color;
-        float pointSize = 4;
+        float pointSize = 3;
         color << 1.0, 0.0, 0.0;
         _viewer->AddDrawable(DrawableCloud::FromCloud(lShapePoints, color, pointSize), "lShapePoints");
         // fprintf(stderr, "------------------2\n");
@@ -392,7 +392,6 @@ void MainWindow::onSliderMovedTo(int cloud_number)
             // getBoundingBox(clusters, bboxPts);
             // getBBox(clusters, bboxPts);
             // fprintf(stderr, "------------------3\n");
-            std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
             // L_shape bbox
             // 找出 选择的 BBox
             int bboxDebugId = -1;
@@ -400,6 +399,7 @@ void MainWindow::onSliderMovedTo(int cloud_number)
             {
                 bboxDebugId = bboxToCluster[_viewer->bboxSelection[0]];
             }
+            std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
             getBBox(clusters, bboxPts, markPoints, bboxToCluster, bboxDebugId);
             // 对比方法
             // getOrientedBBox(clusters, bboxPts2);
@@ -415,7 +415,7 @@ void MainWindow::onSliderMovedTo(int cloud_number)
             // 对比方法 bbox
             // _viewer->AddDrawable(DrawableBBox::FromCloud(bboxPts2, true, 1));
             _viewer->AddDrawable(DrawableCloud::FromCloud(markPoints, Eigen::Vector3f(0.0f, 1.0f, 0.2f),
-                     GLfloat(2)),"L_shape markPoints");
+                     GLfloat(4)),"L_shape markPoints");
         }
 
         infoTextEdit->append("number of cluster : " + QString::number(cluster.getNumCluster()));
@@ -445,8 +445,11 @@ void MainWindow::onSliderMovedTo(int cloud_number)
 
     if (ui->cloudCB->isChecked())
     {
+        Eigen::Vector3f color;
+        color << 0.0, 1.0, 0.0;
         // _viewer->AddDrawable(DrawableCloud::FromCloud(_cloud));
-        _viewer->AddDrawable(DrawSelectAbleCloud::FromCloud(_cloud), "DrawSelectAbleCloud");
+        // _viewer->AddDrawable(DrawSelectAbleCloud::FromCloud(_cloud, color, 2), "DrawSelectAbleCloud");
+        _viewer->AddDrawable(DrawableCloud::FromCloud(_cloud, color, 2), "DrawSelectAbleCloud");
         // 为 viewer 的 drawSelectableCloud 赋值
         // _viewer->selection.clear();
     }
@@ -491,6 +494,7 @@ void MainWindow::onSliderMovedTo(int cloud_number)
     }
 
     // 是否显示插入点
+    // 顺带可视化 圆柱体
     if (ui->insertCB->isChecked())
     {
         groundRemove.getInsertedPoint(*_cloud, *insertCloud);

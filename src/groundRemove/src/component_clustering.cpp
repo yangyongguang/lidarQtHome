@@ -205,7 +205,7 @@ void cluster::makeClusteredCloud(PointCloud & clusterCloud, std::vector<Cloud::P
     std::vector<Cloud::Ptr> clustersTmp;
     clustersTmp.clear();
 
-    for (int idx = 0; idx < numCluster; ++idx)
+    for (int idx = 0; idx < numCluster + 1; ++idx)
     {
         Cloud::Ptr cloudPtr(new Cloud);
         clustersTmp.emplace_back(cloudPtr);
@@ -214,32 +214,40 @@ void cluster::makeClusteredCloud(PointCloud & clusterCloud, std::vector<Cloud::P
     for (int idx = 0; idx <clusterCloud.size(); ++idx)
     {
         point point(clusterCloud[idx].x(), clusterCloud[idx].y(), clusterCloud[idx].z());
-        double x = point.x();
-        double y = point.y();
-        double z = point.z();        
+        float x = point.x();
+        float y = point.y();
+        float z = point.z();        
         // 计算点到雷达二维平面距离        
         point.toSensor2D = std::sqrt(x * x + y * y);
-
-        double xC = x + roiM / 2;
-        double yC = y + roiM / 2;
+        float angle_rad = std::atan2(y, x);
+        float xC = x + roiM / 2;
+        float yC = y + roiM / 2;
 
         if (xC < 0 || xC >= roiM || yC < 0 || yC >= roiM)
             continue;
         
         int xI = floor(numGrid * xC / roiM);
         int yI = floor(numGrid * yC / roiM);
-
         int clusterNum = grid[xI][yI];
         clusterCloud[idx].classID = clusterNum;
         // 添加点云
         // fprintf(stderr, "cluster size [%d]\n", clusters.size());
         // fprintf(stderr, "clusterNum [%d]\n", clusterNum);
-        clustersTmp[clusterNum - 1]->emplace_back(point);
+        // assert(clusterNum <= clustersTmp.size());
+        // fprintf(stderr, "size %d, current %d--------\n", clustersTmp.size(), clusterNum);
+        clustersTmp[clusterNum]->emplace_back(point);
         // 获取最大最小值
-        if (point.z() > clustersTmp[clusterNum - 1]->maxZ)
-            clustersTmp[clusterNum - 1]->maxZ = point.z();
-        if (point.z() < clustersTmp[clusterNum - 1]->minZ)
-            clustersTmp[clusterNum - 1]->minZ = point.z();
+        if (point.z() > clustersTmp[clusterNum]->maxZ)
+            clustersTmp[clusterNum]->maxZ = point.z();
+        if (point.z() < clustersTmp[clusterNum]->minZ)
+            clustersTmp[clusterNum]->minZ = point.z();
+
+        // fprintf(stderr, "makeClusteredCloud---------------------\n");
+        if (angle_rad > clustersTmp[clusterNum]->maxAngle)
+            clustersTmp[clusterNum]->maxAngle = angle_rad;
+        if (angle_rad < clustersTmp[clusterNum]->minAngle)
+            clustersTmp[clusterNum]->minAngle = angle_rad;
+        // fprintf(stderr, "-------------------------------------end\n");
     }
 
     // 排除点数较少的障碍物
@@ -273,25 +281,51 @@ size_t cluster::ColFromAngle(float angle_cols)
     return diff_next < diff_prev ? found : found - 1;
 }
 
+size_t cluster::ColFromAngle(float angle_cols, float minAngle, float maxAngle, const size_t & numSegment)
+{
+    // 每一份的步长
+    float step = (maxAngle - minAngle) / numSegment;
+    // 角度等分
+    int Col = std::floor((angle_cols - minAngle) / step);
+    // if (Col < 0 || Col >= numSegment)
+    // {
+    //     fprintf(stderr, "minAngle %f, maxAngle %f, step %f, Col %d\n", minAngle, maxAngle, step, Col);
+    //     fprintf(stderr, "between %f, real dist %f\n", maxAngle - minAngle, angle_cols - minAngle);
+    // }
+    // return std::floor((angle_cols - minAngle) / step);
+    return Col;
+}
+
 // 从聚类的点中 获取 L_shape 的边缘点
 void cluster::getLShapePoints(const std::vector<Cloud::Ptr> & clusters, Cloud::Ptr & points)
 {    
+    // fprintf(stderr, "getLShapePoints------------------------\n");
     for (auto clusterIt = clusters.begin(); clusterIt != clusters.end(); ++clusterIt)
     {
         std::unordered_map<int, point> pointMap; // 为了可视化
         std::unordered_map<int, int> colToPoint; // 为了修改 lshapePoint 点标记
         // Cloud pts;
         auto & cluster = (*clusterIt);
+        if (cluster->size() < 3)
+            continue;
+        
         // 点云数量太少的， 算法不合适
         // if (cluster->size() < 20)
         //     continue;
         // 用来存储计算得来的 列索引
         std::vector<int> colVec;
         int ptIdx = 0;
+        float minAngle = cluster->minAngle;
+        float maxAngle = cluster->maxAngle;
         for (auto ptIt = cluster->begin(); ptIt != cluster->end(); ++ptIt)
         {
             float angle = std::atan2(ptIt->y(), ptIt->x());
-            size_t colIdx = ColFromAngle(angle);
+            // size_t colIdx = ColFromAngle(angle);
+            size_t colIdx = ColFromAngle(angle, minAngle, maxAngle, 50);
+            // if (colIdx >= 20)
+            //     fprintf(stderr, "colIdx %d, angle %f, minAngle %f, maxAngle %f\n", 
+            //                 colIdx, angle, minAngle, maxAngle);
+            assert(colIdx <= 50); // 不能选取超过20个点的数目
             // 没有该索引， 就直接插入
             if (pointMap.find(colIdx) == pointMap.end())
             {

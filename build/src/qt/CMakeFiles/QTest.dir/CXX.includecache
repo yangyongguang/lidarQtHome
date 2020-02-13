@@ -241,6 +241,8 @@ object.h
 ../src/qt/viewer/object.h
 drawable_selectable_cloud.h
 ../src/qt/viewer/drawable_selectable_cloud.h
+groundRemove/include/param.h
+../src/qt/viewer/groundRemove/include/param.h
 
 ../src/qt/widgets/base_viewer_widget.h
 QMainWindow

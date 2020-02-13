@@ -22,6 +22,20 @@ memory
 opencv2/core/core.hpp
 -
 
+../src/groundRemove/include/param.h
+string
+-
+math.h
+-
+iostream
+-
+array
+-
+vector
+-
+math.h
+-
+
 ../src/qt/drawables/drawable.h
 memory
 -
@@ -79,6 +93,8 @@ object.h
 /home/yyg/code/lidarCode/src/qt/viewer/object.h
 drawable_selectable_cloud.h
 /home/yyg/code/lidarCode/src/qt/viewer/drawable_selectable_cloud.h
+groundRemove/include/param.h
+/home/yyg/code/lidarCode/src/qt/viewer/groundRemove/include/param.h
 
 /opt/Qt5.6.0/5.6/gcc_64/include/QtCore/QDebug
 qdebug.h
