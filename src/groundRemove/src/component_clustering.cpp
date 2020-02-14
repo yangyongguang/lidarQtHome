@@ -298,16 +298,21 @@ size_t cluster::ColFromAngle(float angle_cols, float minAngle, float maxAngle, c
 
 // 从聚类的点中 获取 L_shape 的边缘点
 void cluster::getLShapePoints(const std::vector<Cloud::Ptr> & clusters, Cloud::Ptr & points)
-{    
+{ 
+    int numSampPoint = 80;  
     // fprintf(stderr, "getLShapePoints------------------------\n");
     for (auto clusterIt = clusters.begin(); clusterIt != clusters.end(); ++clusterIt)
     {
-        std::unordered_map<int, point> pointMap; // 为了可视化
-        std::unordered_map<int, int> colToPoint; // 为了修改 lshapePoint 点标记
+        // std::unordered_map<int, point> pointMap; // 为了可视化
+        // std::unordered_map<int, int> colToPoint; // 为了修改 lshapePoint 点标记
         // Cloud pts;
         auto & cluster = (*clusterIt);
         if (cluster->size() < 3)
             continue;
+        // colIdx 到 实际点云簇中的点
+        std::vector<int> ToPointID(numSampPoint + 1, -1);
+        // 存储最小的距离
+        std::vector<float> ToDist(numSampPoint + 1, 999);
         
         // 点云数量太少的， 算法不合适
         // if (cluster->size() < 20)
@@ -321,12 +326,30 @@ void cluster::getLShapePoints(const std::vector<Cloud::Ptr> & clusters, Cloud::P
         {
             float angle = std::atan2(ptIt->y(), ptIt->x());
             // size_t colIdx = ColFromAngle(angle);
-            size_t colIdx = ColFromAngle(angle, minAngle, maxAngle, 50);
+            size_t colIdx = ColFromAngle(angle, minAngle, maxAngle, numSampPoint);
             // if (colIdx >= 20)
             //     fprintf(stderr, "colIdx %d, angle %f, minAngle %f, maxAngle %f\n", 
             //                 colIdx, angle, minAngle, maxAngle);
-            assert(colIdx <= 50); // 不能选取超过20个点的数目
+            assert(colIdx <= numSampPoint); // 不能选取超过20个点的数目
             // 没有该索引， 就直接插入
+            if (ptIt->toSensor2D < ToDist[colIdx])
+            {
+                ToDist[colIdx] = ptIt->toSensor2D;
+                ToPointID[colIdx] = ptIdx;
+            }
+            ptIdx++;
+        }
+        for (int idx = 0; idx < ToPointID.size(); ++idx)
+        {
+            if (ToPointID[idx] == -1)
+            {
+                // fprintf(stderr, "idx %d\n", idx);
+                continue;
+            }
+            points->emplace_back((*cluster)[ToPointID[idx]]);
+            (*cluster)[ToPointID[idx]].isLShapePoint = 1;
+        }
+            /*
             if (pointMap.find(colIdx) == pointMap.end())
             {
                 // 标记为 边缘点
@@ -349,12 +372,12 @@ void cluster::getLShapePoints(const std::vector<Cloud::Ptr> & clusters, Cloud::P
             }  
             ++ptIdx;    
         }
-
         for (auto it = pointMap.begin(); it != pointMap.end(); ++it)
         {
             points->emplace_back(it->second);
             (*cluster)[colToPoint[it->first]].isLShapePoint = 1;
         }
+        */
     }
 }
 

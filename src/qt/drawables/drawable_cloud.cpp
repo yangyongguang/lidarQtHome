@@ -35,9 +35,9 @@ void DrawableCloud::Draw() const
         }        
         auto real_point = point.AsEigenVector();
         // fprintf(stderr, "(%f, %f, %f)\n", real_point.x(), real_point.y(), real_point.z());
-        glVertex3f(real_point.x(), real_point.y(), real_point.z());
+        // glVertex3f(real_point.x(), real_point.y(), real_point.z());
         // 二维显示
-        // glVertex3f(real_point.x(), real_point.y(), -1.72f);
+        glVertex3f(real_point.x(), real_point.y(), -1.721f);
     }
     glEnd();
     glPopMatrix();    

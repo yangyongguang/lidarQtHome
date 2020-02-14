@@ -411,11 +411,11 @@ void MainWindow::onSliderMovedTo(int cloud_number)
             // _viewer->AddDrawable(DrawableBBox::FromCloud(bboxPts, true));
             _viewer->drawSelectableBBox = DrawSelectAbleBBox(bboxPts, true);
             // fprintf(stderr, "drawSelectedBBox objects size : %d\n", _viewer->drawSelectableBBox.objects.size());
-            _viewer->AddDrawable(DrawSelectAbleBBox::FromCloud(bboxPts, true), "DrawSelectAbleBBox");
+            _viewer->AddDrawable(DrawSelectAbleBBox::FromCloud(bboxPts, false), "DrawSelectAbleBBox");
             // 对比方法 bbox
             // _viewer->AddDrawable(DrawableBBox::FromCloud(bboxPts2, true, 1));
             _viewer->AddDrawable(DrawableCloud::FromCloud(markPoints, Eigen::Vector3f(0.0f, 1.0f, 0.2f),
-                     GLfloat(4)),"L_shape markPoints");
+                     GLfloat(6)),"L_shape markPoints");
         }
 
         infoTextEdit->append("number of cluster : " + QString::number(cluster.getNumCluster()));
