@@ -434,10 +434,12 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             // maxDy = sumY/clusteredPoints[iCluster].size();
 
             // vector adding
-            float maxMvecX = maxMx - maxDx;
-            float maxMvecY = maxMy - maxDy;
-            float minMvecX = minMx - maxDx;
-            float minMvecY = minMy - maxDy;
+            // float maxMvecX = maxMx - maxDx;
+            // float maxMvecY = maxMy - maxDy;
+            // float minMvecX = minMx - maxDx;
+            // float minMvecY = minMy - maxDy;
+            // // 夹角来个边的
+            // float theatAOBVal = maxMvecX * maxMvecY - minMvecX * minMvecY;
             // float lastX = maxDx + maxMvecX + minMvecX;
             // float lastY = maxDy + maxMvecY + minMvecY;
 
@@ -447,18 +449,76 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             markPoints->emplace_back(point(maxMx, maxMy, 0.0f));
             markPoints->emplace_back(point(minMx, minMy, 0.0f));
             // 求 垂线 俩边的点集合
-            float k = (maxMvecY - minMvecY) / (maxMvecX - minMvecX + 1e-6);
+            // float k = (maxMvecY - minMvecY) / (maxMvecX - minMvecX + 1e-6);
             // 这里出现过一个重大的 bug 求斜率时候， 写错了
             // float k_1 = -1 / (k_1 + 1e-6);
-            float k_1 = -1 / (k + 1e-6);
+            // 正确的写法
+            // float k_1 = -1 / (k + 1e-6);
             
-            // 垂直线段
-            Vertex vet(k_1, maxDy - k_1 * maxDx);
+            // Vertex vet(k_1, maxDy - k_1 * maxDx);
             // 存储较长边点云集合
             // vector<point> ptSet;
             vector<Point2f> ptSet, ptSet2;
             float distA = (maxMy- maxDy) * (maxMy - maxDy) + (maxMx - maxDx) * (maxMx - maxDx);
             float distB = (minMy- maxDy) * (minMy - maxDy) + (minMx - maxDx) * (minMx - maxDx);
+            
+            // 所成的夹角的值
+            // float cosThetaAOB = theatAOBVal / (distB * distA);
+            // 旋转 30 度角分割 ------------------
+            // 第一步 长边到短边的叉成 （x1, y1） x (x2, y2) = (x1 * y2 - x2 * y1) 正， 顺时针， 负， 逆时针
+            // 利用 tan (A + B) = (tan A + tan B) / (1 - tan A * tan B)
+            // 替换掉新的 斜率
+            // a 是长边
+            float crossProduct;
+            float Xa, Ya, Xb, Yb;
+            if (distA < distB)
+            {
+                
+                Xa = minMx - maxDx;
+                Ya = minMy - maxDy;
+
+                Xb = maxMx - maxDx;
+                Yb = maxMy - maxDy;
+            }
+            else
+            {
+                Xa = maxMx - maxDx;
+                Ya = maxMy - maxDy;
+
+                Xb = minMx - maxDx;
+                Yb = minMy - maxDy;
+            }
+            
+            crossProduct = Xa * Yb - Xb * Ya;
+            // 逆时针旋转 加角度
+            float k_curr  = Ya / (Xa + 1e-6);
+            float k_1; // 旋转 30 度之后的斜率
+            if (crossProduct > 0)
+            {
+                k_1 = (0.2679 + k_curr) / (1 - k_curr * 0.2679);
+            }
+            else
+            {
+                // 顺时针旋转， 减去一个角度
+                k_1 = (-0.2679 + k_curr) / (1 - k_curr * (-0.2679));
+            }
+            // 旋转之后的直线
+            Vertex vet(k_1, maxDy - k_1 * maxDx);
+            if (debugBool)
+            {
+                fprintf(stderr, "k_curr %f, k_1 %f, crossProduct %f\n", k_curr, k_1, crossProduct);
+                fprintf(stderr, "tan(15) :%f,  tan(30)%f\n", tanf(15.0f / 180 * M_PI), tanf(60.0f / 180 * M_PI));
+            }
+            if (debugBool)
+            {
+                for (int idx = 1; idx < 10; ++idx)
+                {
+                    markPoints->emplace_back(point(maxDx + 0.1 * idx, maxDy + 0.1 * idx * k_1, -1.7f));
+                }
+            }
+            // 判断长边            
+            //----------------------------------
+            // 垂直线段
 
             // fprintf(stderr, "dist A -- > B(%f, %f)\n", distA, distB);            
             // float zero
