@@ -182,6 +182,17 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             onUpdate();
             break;
 
+        case Qt::Key_2:
+            fprintf(stderr, "key 2 pressed, onUpdate\n");
+            onSliderMovedTo(curr_data_idx);
+            break;
+
+        case Qt::Key_3:
+            fprintf(stderr, "key 3 pressed, clear selsection\n");
+            onClearSelection();
+            onSliderMovedTo(curr_data_idx);
+            break;
+
         case Qt::Key_Space:
             onPlayClouds();
             break;

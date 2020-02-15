@@ -324,7 +324,7 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
         vector<cv::Point2f> pointVec(numPoints);
         vector<Point2f> pcPoints(4);
         float minMx, minMy, maxMx, maxMy;
-        float minM = 999; float maxM = -999; float maxZ = -99;
+        float minM = 999; float maxM = -999; float maxZ = -999;
         // for center of gravity
         // float sumX = 0; float sumY = 0;
         // for (size_t iPoint = 0; iPoint < (*clusteredPoints[iCluster]).size(); iPoint++)
@@ -434,12 +434,12 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             // maxDy = sumY/clusteredPoints[iCluster].size();
 
             // vector adding
-            // float maxMvecX = maxMx - maxDx;
-            // float maxMvecY = maxMy - maxDy;
-            // float minMvecX = minMx - maxDx;
-            // float minMvecY = minMy - maxDy;
+            float maxMvecX = maxMx - maxDx;
+            float maxMvecY = maxMy - maxDy;
+            float minMvecX = minMx - maxDx;
+            float minMvecY = minMy - maxDy;
             // // 夹角来个边的
-            // float theatAOBVal = maxMvecX * maxMvecY - minMvecX * minMvecY;
+            float theatAOBVal = maxMvecX * minMvecX + maxMvecY * minMvecY;
             // float lastX = maxDx + maxMvecX + minMvecX;
             // float lastY = maxDy + maxMvecY + minMvecY;
 
@@ -458,12 +458,12 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             // Vertex vet(k_1, maxDy - k_1 * maxDx);
             // 存储较长边点云集合
             // vector<point> ptSet;
-            vector<Point2f> ptSet, ptSet2;
-            float distA = (maxMy- maxDy) * (maxMy - maxDy) + (maxMx - maxDx) * (maxMx - maxDx);
-            float distB = (minMy- maxDy) * (minMy - maxDy) + (minMx - maxDx) * (minMx - maxDx);
+            vector<Point2f> ptSet;//, ptSet2;
+            float distA = std::sqrt((maxMy- maxDy) * (maxMy - maxDy) + (maxMx - maxDx) * (maxMx - maxDx));
+            float distB = std::sqrt((minMy- maxDy) * (minMy - maxDy) + (minMx - maxDx) * (minMx - maxDx));
             
             // 所成的夹角的值
-            // float cosThetaAOB = theatAOBVal / (distB * distA);
+            float cosThetaAOB = theatAOBVal / (distB * distA);
             // 旋转 30 度角分割 ------------------
             // 第一步 长边到短边的叉成 （x1, y1） x (x2, y2) = (x1 * y2 - x2 * y1) 正， 顺时针， 负， 逆时针
             // 利用 tan (A + B) = (tan A + tan B) / (1 - tan A * tan B)
@@ -493,15 +493,31 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             // 逆时针旋转 加角度
             float k_curr  = Ya / (Xa + 1e-6);
             float k_1; // 旋转 30 度之后的斜率
-            if (crossProduct > 0)
+            // 角度大于 130 接近直线， 选取全部点
+            bool moreThanTheta = false;
+            if (cosThetaAOB < std::cos(130.0f / 180 * M_PI))
             {
-                k_1 = (0.2679 + k_curr) / (1 - k_curr * 0.2679);
+                if (debugBool)
+                    fprintf(stderr, "cosTheatAOB %f度, cos(150) : %f, cosThetaAOB %f\n", 
+                                std::acos(cosThetaAOB) / M_PI * 180, 
+                                std::cos(150.0f / 180 * M_PI),
+                                cosThetaAOB);
+                k_1 = Yb / (Xb + 1e-6);
+                moreThanTheta = true;
             }
             else
             {
-                // 顺时针旋转， 减去一个角度
-                k_1 = (-0.2679 + k_curr) / (1 - k_curr * (-0.2679));
+                if (crossProduct > 0)
+                {
+                    k_1 = (0.2679 + k_curr) / (1 - k_curr * 0.2679);
+                }
+                else
+                {
+                    // 顺时针旋转， 减去一个角度
+                    k_1 = (-0.2679 + k_curr) / (1 - k_curr * (-0.2679));
+                }
             }
+            
             // 旋转之后的直线
             Vertex vet(k_1, maxDy - k_1 * maxDx);
             if (debugBool)
@@ -511,9 +527,9 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             }
             if (debugBool)
             {
-                for (int idx = 1; idx < 10; ++idx)
+                for (int idx = 1; idx < 30; ++idx)
                 {
-                    markPoints->emplace_back(point(maxDx + 0.1 * idx, maxDy + 0.1 * idx * k_1, -1.7f));
+                    markPoints->emplace_back(point(maxDx + 0.04 * idx, maxDy + 0.04 * idx * k_1, -1.7f));
                 }
             }
             // 判断长边            
@@ -540,7 +556,13 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             for (int i = 0; i < numPoints; ++i)
             {
                 float dist = k_1 * clusterTmp[i].x() + vet.y - clusterTmp[i].y();
-                if (dist * lessZero >= 0)
+                if (moreThanTheta)
+                {
+                    if (debugBool)
+                        markPoints->emplace_back(clusterTmp[i]);
+                    ptSet.emplace_back(Point2f(clusterTmp[i].x(), clusterTmp[i].y()));
+                }
+                else if (dist * lessZero >= 0)
                 {
                     if (debugBool)
                         fprintf(stderr, "K_1: %f,  dist : %f,  lessZero :%f \n", k_1, dist, lessZero);
@@ -549,6 +571,9 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
                         markPoints->emplace_back(clusterTmp[i]);
                     ptSet.emplace_back(Point2f(clusterTmp[i].x(), clusterTmp[i].y()));
                 }
+                
+
+                
                 // else
                 // {
                 //     ptSet2.emplace_back(Point2f(clusterTmp[i].x(), clusterTmp[i].y()));
@@ -569,7 +594,7 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
                 fprintf(stderr, "ptSet size : %d\n", ptSet.size());
 
             if (ptSet.size() >= 10)
-                rectK = fitLineRansac(ptSet, 100, 0.09, debugBool);
+                rectK = fitLineRansac(ptSet, 100, 0.06f, debugBool);
             else
                 rectK = fitLine(ptSet);
                 // fprintf(stderr, "rectK : %f\n", rectK);  

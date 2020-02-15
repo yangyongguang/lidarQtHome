@@ -18,6 +18,8 @@ bool BaseViewerWidget::eventFilter(QObject *object, QEvent *event)
 		if (keyEvent->key() == Qt::Key_Right || 
 				keyEvent->key() == Qt::Key_Left ||
 				keyEvent->key() == Qt::Key_1 ||
+				keyEvent->key() == Qt::Key_2 ||
+				keyEvent->key() == Qt::Key_3 ||
 				keyEvent->key() == Qt::Key_Space) 
 		{
 			keyPressEvent(keyEvent);
