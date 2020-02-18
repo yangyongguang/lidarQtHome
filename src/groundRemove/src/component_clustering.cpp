@@ -218,8 +218,10 @@ void cluster::makeClusteredCloud(PointCloud & clusterCloud, std::vector<Cloud::P
         float y = point.y();
         float z = point.z();        
         // 计算点到雷达二维平面距离        
-        point.toSensor2D = std::sqrt(x * x + y * y);
+        point.toSensor2D = std::sqrt(x * x + y * y);        
         float angle_rad = std::atan2(y, x);
+        // 避免重复计算， 时间换空间方法。
+        point.atan2Val = angle_rad;
         float xC = x + roiM / 2;
         float yC = y + roiM / 2;
 
@@ -281,7 +283,10 @@ size_t cluster::ColFromAngle(float angle_cols)
     return diff_next < diff_prev ? found : found - 1;
 }
 
-size_t cluster::ColFromAngle(float angle_cols, float minAngle, float maxAngle, const size_t & numSegment)
+size_t cluster::ColFromAngle(float angle_cols, float minAngle, 
+                             float maxAngle, 
+                             const size_t & numSegment,
+                             const bool & debug)
 {
     // 每一份的步长
     float step = (maxAngle - minAngle) / numSegment;
@@ -293,19 +298,30 @@ size_t cluster::ColFromAngle(float angle_cols, float minAngle, float maxAngle, c
     //     fprintf(stderr, "between %f, real dist %f\n", maxAngle - minAngle, angle_cols - minAngle);
     // }
     // return std::floor((angle_cols - minAngle) / step);
+    // if (debug)
+    // {
+    //     fprintf(stderr, "info: step %f,  angle_cols %f,  minAngle %f , maxAngle %f\n", 
+    //                 step, angle_cols, minAngle, maxAngle);
+    // }
     return Col;
 }
 
 // 从聚类的点中 获取 L_shape 的边缘点
-void cluster::getLShapePoints(const std::vector<Cloud::Ptr> & clusters, Cloud::Ptr & points)
+void cluster::getLShapePoints(const std::vector<Cloud::Ptr> & clusters, Cloud::Ptr & points, const int & debugID)
 { 
     int numSampPoint = 80;  
+    int iCluster = 0;
     // fprintf(stderr, "getLShapePoints------------------------\n");
-    for (auto clusterIt = clusters.begin(); clusterIt != clusters.end(); ++clusterIt)
+    for (auto clusterIt = clusters.begin(); clusterIt != clusters.end(); ++clusterIt, ++iCluster)
     {
         // std::unordered_map<int, point> pointMap; // 为了可视化
         // std::unordered_map<int, int> colToPoint; // 为了修改 lshapePoint 点标记
         // Cloud pts;
+        bool debugBool = false;
+        // 是否需要修正跨越角度
+        bool needFixed = false;
+        if (iCluster == debugID)
+            debugBool = true;
         auto & cluster = (*clusterIt);
         if (cluster->size() < 3)
             continue;
@@ -322,11 +338,66 @@ void cluster::getLShapePoints(const std::vector<Cloud::Ptr> & clusters, Cloud::P
         int ptIdx = 0;
         float minAngle = cluster->minAngle;
         float maxAngle = cluster->maxAngle;
+        
+        // 修正跨过 pi ----> pi 这个位置的点
+        if (maxAngle - minAngle > M_PI)
+        {
+            float minAngleFixed = 999.0f;
+            float maxAngleFixed = -999.0f;
+            int minLPointIdx;
+            int maxLPointIdx;
+            int iPoint = 0;
+            for (auto ptIt = cluster->begin(); ptIt != cluster->end(); ++ptIt)
+            {
+                // 相当于旋转 180 度角
+                float angle;
+                if (ptIt->atan2Val > 0.0f)
+                    angle = ptIt->atan2Val - M_PI;
+                else
+                    angle = ptIt->atan2Val + M_PI;
+                
+                if (angle < minAngleFixed)
+                {
+                    minAngleFixed = angle;
+                    cluster->minLPoint = iPoint;
+                }
+                if (angle > maxAngleFixed)
+                {
+                    maxAngleFixed = angle;
+                    cluster->maxLPoint = iPoint;
+                }
+                ++iPoint;
+            }
+            minAngle = minAngleFixed;
+            maxAngle = maxAngleFixed;
+            needFixed = true;
+        }
+        // if (debugBool)
+        //     fprintf(stderr, "cluster has numPoint: %d\n", cluster->size());
         for (auto ptIt = cluster->begin(); ptIt != cluster->end(); ++ptIt)
         {
-            float angle = std::atan2(ptIt->y(), ptIt->x());
+            // float angle = std::atan2(ptIt->y(), ptIt->x());
+            float angle = ptIt->atan2Val;
+            if (needFixed)
+            {
+                if (angle > 0)
+                {
+                    angle -= M_PI;
+                }
+                else
+                {
+                    angle += M_PI;
+                }                
+            }
             // size_t colIdx = ColFromAngle(angle);
-            size_t colIdx = ColFromAngle(angle, minAngle, maxAngle, numSampPoint);
+            // 角度跨过 0 度线时，会导致差值大于 180 度情况， 例如 minAngle -3.141381 , maxAngle 3.141573
+            // 所以需要重新修正
+            size_t colIdx;
+            colIdx = ColFromAngle(angle, minAngle, maxAngle, numSampPoint, debugBool);
+            // if (debugBool)
+            // {
+            //     fprintf(stderr, "colIdx : %d\n", colIdx);
+            // }
             // if (colIdx >= 20)
             //     fprintf(stderr, "colIdx %d, angle %f, minAngle %f, maxAngle %f\n", 
             //                 colIdx, angle, minAngle, maxAngle);

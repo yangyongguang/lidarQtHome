@@ -31,6 +31,15 @@ void Viewer::draw()
     glVertex3f(-2.5f, 1.4f, -1.73f);
     glVertex3f(-2.5f, -1.4f, -1.73f);   
     glEnd();
+    // 参考前进方向
+    // glLineWidth (1.5f);    
+    // glLineStipple (1, 0x0F0F);
+    // glBegin(GL_LINES);  
+    // glVertex3f(-100.0f, -1.0f, -1.72f);
+    // glVertex3f(100.0f, -1.0f, -1.72f);
+    // glVertex3f(-100.0f, 1.0f, -1.72f);
+    // glVertex3f(100.0f, 1.0f, -1.72f);
+    // glEnd();
     //////////------------------   绘制参考线圆线 白色----------------    
     // float radius = 10;
     // glColor3f(1.0f, 0.0f, 0.0f);

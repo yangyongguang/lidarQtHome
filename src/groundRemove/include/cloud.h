@@ -69,6 +69,7 @@ public:
 public:
     int classID = -1;
     float toSensor2D = 0.0f;
+    float atan2Val = 0.0f;
     // 是否是 lShapePoint
     int isLShapePoint = 0;
     
@@ -112,5 +113,9 @@ public:
     // 最大与最小角度
     float maxAngle;
     float minAngle;
+
+    // 存储 L-shape 的俩个拐点的坐标的索引
+    int minLPoint = -1;
+    int maxLPoint = -1;
 };
 #endif

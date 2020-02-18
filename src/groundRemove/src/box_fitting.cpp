@@ -312,6 +312,8 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
                 clusterTmp.emplace_back((*clusteredPoints[iCluster])[idx]);
         }
 
+        clusterTmp.minLPoint = (*clusteredPoints[iCluster]).minLPoint;
+        clusterTmp.maxLPoint = (*clusteredPoints[iCluster]).maxLPoint;
         // int numPoints = (*clusteredPoints[iCluster]).size();
         int numPoints = clusterTmp.size();
         // 点数太少， minAreRect 不能调用
@@ -328,41 +330,57 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
         // for center of gravity
         // float sumX = 0; float sumY = 0;
         // for (size_t iPoint = 0; iPoint < (*clusteredPoints[iCluster]).size(); iPoint++)
-        for (size_t iPoint = 0; iPoint < clusterTmp.size(); iPoint++)
+        if ((*clusteredPoints[iCluster]).minLPoint == -1)
         {
-            //遍历某个点云簇中的所有点
-            // float pX = (*clusteredPoints[iCluster])[iPoint].x();
-            // float pY = (*clusteredPoints[iCluster])[iPoint].y();
-            // float pZ = (*clusteredPoints[iCluster])[iPoint].z();
-            float pX = clusterTmp[iPoint].x();
-            float pY = clusterTmp[iPoint].y();
-            float pZ = clusterTmp[iPoint].z();
-            // cast (-15 < x,y < 15) into (0 < x,y < 30)          
-            // float m = pY/pX;
-            pointVec[iPoint].x = pX;
-            pointVec[iPoint].y = pY;
-
-            float m = atan2(pY, pX);
-            if(m < minM) 
+            for (size_t iPoint = 0; iPoint < clusterTmp.size(); iPoint++)
             {
-                minM = m;
-                minMx = pX;
-                minMy = pY;
+                //遍历某个点云簇中的所有点
+                // float pX = (*clusteredPoints[iCluster])[iPoint].x();
+                // float pY = (*clusteredPoints[iCluster])[iPoint].y();
+                // float pZ = (*clusteredPoints[iCluster])[iPoint].z();
+                float pX = clusterTmp[iPoint].x();
+                float pY = clusterTmp[iPoint].y();
+                float pZ = clusterTmp[iPoint].z();
+                // cast (-15 < x,y < 15) into (0 < x,y < 30)          
+                // float m = pY/pX;
+                pointVec[iPoint].x = pX;
+                pointVec[iPoint].y = pY;
+
+                // float m = atan2(pY, pX);
+                float m = clusterTmp[iPoint].atan2Val;
+                if(m < minM) 
+                {
+                    minM = m;
+                    minMx = pX;
+                    minMy = pY;
+                }
+                if(m > maxM) 
+                {
+                    maxM = m;
+                    maxMx = pX;
+                    maxMy = pY;
+                }
+
+                //get maxZ
+                if(pZ > maxZ) maxZ = pZ;
+
+                // sumX += offsetX;
+                // sumY += offsetY; 
+
             }
-            if(m > maxM) 
-            {
-                maxM = m;
-                maxMx = pX;
-                maxMy = pY;
-            }
-
-            //get maxZ
-            if(pZ > maxZ) maxZ = pZ;
-
-            // sumX += offsetX;
-            // sumY += offsetY; 
-
+            // if (debugBool)
+            //     fprintf(stderr, "111-->(maxMx, maxMy), (minMx, minMy), (%f, %f), (%f, %f)\n", maxMx, maxMy, minMx, minMy);
         }
+        else
+        {
+            maxMx = (*clusteredPoints[iCluster])[(*clusteredPoints[iCluster]).maxLPoint].x();
+            minMx = (*clusteredPoints[iCluster])[(*clusteredPoints[iCluster]).minLPoint].x();
+            maxMy = (*clusteredPoints[iCluster])[(*clusteredPoints[iCluster]).maxLPoint].y();
+            minMy = (*clusteredPoints[iCluster])[(*clusteredPoints[iCluster]).minLPoint].y();
+            // if (debugBool)
+            //     fprintf(stderr, "222->(maxMx, maxMy), (minMx, minMy), (%f, %f), (%f, %f)\n", maxMx, maxMy, minMx, minMy);
+        }
+        
         // L shape fitting parameters
         float xDist = maxMx - minMx;
         float yDist = maxMy - minMy;
@@ -570,8 +588,7 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
                     if (debugBool)
                         markPoints->emplace_back(clusterTmp[i]);
                     ptSet.emplace_back(Point2f(clusterTmp[i].x(), clusterTmp[i].y()));
-                }
-                
+                }              
 
                 
                 // else

@@ -53,14 +53,17 @@ public:
     void insertCubeVec();
     inline std::vector<Rect2D> getRectVec() const {return rect2DVec;}
 
-    void getLShapePoints(const std::vector<Cloud::Ptr> & clusters, Cloud::Ptr & points);
+    void getLShapePoints(const std::vector<Cloud::Ptr> & clusters, 
+                         Cloud::Ptr & points, 
+                         const int & debugID);
 
     size_t ColFromAngle(float angle_cols);
     // 根据每个对象， 平均分配多少份
     size_t ColFromAngle(float angle_cols, 
                         float minAngle, 
                         float maxAngle, 
-                        const size_t & numSegment = 20);
+                        const size_t & numSegment = 20,
+                        const bool & debug = false);
 
 private:
     int numCluster;

@@ -243,6 +243,7 @@ void MainWindow::onOpenFolderToRead()
     ui->playBT->setEnabled(true);
     ui->updatePB->setEnabled(true);
     ui->clearSelectionPB->setEnabled(true);
+    ui->resetBT->setEnabled(true);
 }
 
 // onPlayClouds 函数会改变 VSlider 的值， 所以会触发控件对应的槽函数 onSliderMovedTo 
@@ -273,7 +274,7 @@ void MainWindow::onPlayClouds()
 
 void MainWindow::onReset()
 {
-    ui->resetBT->setEnabled(false);
+    // ui->resetBT->setEnabled(false);
     curr_data_idx = 0;
     ui->DataIdxVSlider->setValue(curr_data_idx);
     ui->DataIdxSBox->setValue(curr_data_idx);
@@ -299,8 +300,8 @@ void MainWindow::onSliderMovedTo(int cloud_number)
     // _viewer->AddDrawable(DrawableCloud::FromCloud(_cloud));
     // _viewer->update();
 
-    if (this->curr_data_idx == numData - 1)
-        ui->resetBT->setEnabled(true);
+    // if (this->curr_data_idx == numData - 1)
+    //     ui->resetBT->setEnabled(true);
 
     // 去地
     // fprintf(stderr, "<<<<<<<<<<<<<<<-------------------------------\n");
@@ -384,8 +385,16 @@ void MainWindow::onSliderMovedTo(int cloud_number)
         cluster.makeClusteredCloud(*obstacle_cloud, clusters);
 
         // 找出最佳的 最表面的 clusters 
+        int bboxDebugId = -1;
+        if (ui->bboxCB->isChecked())
+        {
+            if (_viewer->bboxSelection.size() > 0)
+            {
+                bboxDebugId = bboxToCluster[_viewer->bboxSelection[0]];
+            }
+        }
         Cloud::Ptr lShapePoints (new Cloud);
-        cluster.getLShapePoints(clusters, lShapePoints);
+        cluster.getLShapePoints(clusters, lShapePoints, bboxDebugId);
         Eigen::Vector3f color;
         float pointSize = 3;
         color << 1.0, 0.0, 0.0;
@@ -405,11 +414,11 @@ void MainWindow::onSliderMovedTo(int cloud_number)
             // fprintf(stderr, "------------------3\n");
             // L_shape bbox
             // 找出 选择的 BBox
-            int bboxDebugId = -1;
-            if (_viewer->bboxSelection.size() > 0)
-            {
-                bboxDebugId = bboxToCluster[_viewer->bboxSelection[0]];
-            }
+            // int bboxDebugId = -1;
+            // if (_viewer->bboxSelection.size() > 0)
+            // {
+            //     bboxDebugId = bboxToCluster[_viewer->bboxSelection[0]];
+            // }
             std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
             getBBox(clusters, bboxPts, markPoints, bboxToCluster, bboxDebugId);
             // 对比方法
