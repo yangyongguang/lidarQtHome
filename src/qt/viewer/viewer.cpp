@@ -32,6 +32,14 @@ void Viewer::draw()
     glVertex3f(-2.5f, -1.4f, -1.73f);   
     glEnd();
     // 参考前进方向
+    glLineWidth (0.8f);    
+    glLineStipple (1, 0x0F0F);
+    glBegin(GL_LINES);  
+    glVertex3f(-100.0f, 0.0f, -1.72f);
+    glVertex3f(100.0f, 0.0f, -1.72f);
+    glVertex3f(0.0f, -100.0f, -1.72f);
+    glVertex3f(0.0f, 100.0f, -1.72f);
+    glEnd();
     // glLineWidth (1.5f);    
     // glLineStipple (1, 0x0F0F);
     // glBegin(GL_LINES);  
@@ -40,16 +48,16 @@ void Viewer::draw()
     // glVertex3f(-100.0f, 1.0f, -1.72f);
     // glVertex3f(100.0f, 1.0f, -1.72f);
     // glEnd();
-    //////////------------------   绘制参考线圆线 白色----------------    
-    // float radius = 10;
-    // glColor3f(1.0f, 0.0f, 0.0f);
-    // while (radius <= 100)
-    // {
-    //     /* code */
-    //     drawRefCircle(radius, radius * 100);
-    //     radius += 10;
-    // }
-    //////////--------------------- 绘制距离圆结束  ------------------
+    ////////------------------   绘制参考线圆线 白色----------------    
+    float radius = 10;
+    glColor3f(1.0f, 0.0f, 0.0f);
+    while (radius <= 100)
+    {
+        /* code */
+        drawRefCircle(radius, radius * 100);
+        radius += 10;
+    }
+    ////////--------------------- 绘制距离圆结束  ------------------
     
     // ---------------------------- 绘制可视化网格 ----
     // float radius = 10;

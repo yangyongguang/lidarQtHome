@@ -458,7 +458,7 @@ void GroundSegmentation::segment(const Cloud & cloud, std::vector<int> * segment
         getLines(&lines);    
         // 可视化部分结果
         // 跟新 bin 是否是地面点， 根据是否在地面线段上
-        updateBinGround();
+        updateBinGround();   
         // 给点云分类
         // assignCluster(segmentation);
         // 第三种给点云分类的方法， 利用地面点的距离分类
@@ -603,7 +603,7 @@ void GroundSegmentation::assignClusterByLine(std::vector<int> * segmentation)
 void GroundSegmentation::assignClusterByLineThread(const unsigned int &start_index,
                                              const unsigned int &end_index,
                                              std::vector<int> *segmentation) 
-{
+{ 
     // fprintf(stderr, "_params.n_segments: %d\n", params_.n_segments);
     const double segment_step = 2 * M_PI / params_.n_segments;
     for (unsigned int idx = start_index; idx < end_index; ++idx)
@@ -614,7 +614,6 @@ void GroundSegmentation::assignClusterByLineThread(const unsigned int &start_ind
         Bin::MinZPoint point_2d = segment_coordinates_[idx];
         const int segment_idx = bin_index_[idx].first;
         const int bin_idx = bin_index_[idx].second;
-
         // 寻找 debug 的 Bin 的格子
         // if (segment_idx == debugSegIdx && bin_idx == debugBinIdx)
         // {
@@ -719,6 +718,7 @@ void GroundSegmentation::assignClusterByLineThread(const unsigned int &start_ind
         }
         
     }
+    
 }
 
 void GroundSegmentation::getInsertedPoint(Cloud & cloud, Cloud & insertCloud)

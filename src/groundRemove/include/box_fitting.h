@@ -64,11 +64,17 @@ float fitLine(const std::vector<cv::Point2f> & points);
 float fitLineRansac(const vector<cv::Point2f>& clouds, 
                     const int & num_iterations,
                     const float & tolerance,
-                    const bool & debug = false);
+                    float & correct,
+                    const bool & debug = false
+                    );
 
 void getOrientedBBox(const vector<Cloud::Ptr> & clusteredPoints,
                     vector<Cloud::Ptr> & bbPoints);    
 
 // 根据方向拟合点云 RECT
 void fitRect(const float & k, const Cloud & cloud, std::vector<cv::Point2f> & rect);
+// 利用各种方法求对称点云的方向
+float direction(const Cloud & cloud);
+float direction(const std::vector<cv::Point2f> & cloud);
+
 #endif //MY_PCL_TUTORIAL_BOX_FITTING_H

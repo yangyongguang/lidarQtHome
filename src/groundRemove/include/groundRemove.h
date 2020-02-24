@@ -239,7 +239,7 @@ public:
         std::vector<int> labels;
         std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
         /////////////////////////////////////////////////////////////
-        segmenter.segment(cloudfilter, &labels);           
+        segmenter.segment(cloudfilter, &labels);               
         for (size_t i = 0; i < cloudfilter.size(); ++i)
         {
             if (labels[i] == 1)

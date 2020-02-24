@@ -300,6 +300,7 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
     // fprintf(stderr, "current choose iCluster %d\n", debugID);
     for (size_t iCluster = 0; iCluster < clusteredPoints.size(); iCluster++)
     {   
+        // fprintf(stderr, "---iCluster %d, total %d\n", iCluster, clusteredPoints.size());
         bool debugBool = false;
         if (iCluster == debugID)
             debugBool = true;
@@ -395,8 +396,91 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
         // lSlopeDist = 30, lnumPoints = 300
         int sizePoint;
         // fprintf(stderr, "slopeDist : %f, numPoints : %d\n", slopeDist, numPoints);
-        if(slopeDist > lSlopeDist && numPoints > lnumPoints)
+        bool hasRect = false;
+        // 对称， 且不是侧边车辆的对称结构
+        // fprintf(stderr, "has gone ----\n");
+        if (debugBool)
         {
+            fprintf(stderr, "slopeDist %f, numPoints %d\n", slopeDist, numPoints);
+        }
+        // 车宽 2.5m ？？？
+        if ((*clusteredPoints[iCluster]).numSymPoints >= 30 && slopeDist < 2.5f && numPoints > lnumPoints)
+        {
+            // fprintf(stderr, "has gone404 ----\n");
+            float rectK;
+            if (debugBool)
+            {
+                fprintf(stderr, "using direction, num %d Symmetric points\n", 
+                        (*clusteredPoints[iCluster]).numSymPoints);
+            }
+            // 对称情况， 直接对全部点云使用 pac 方法  失败了
+            // rectK = direction(*clusteredPoints[iCluster]);
+            // rectK = direction(clusterTmp);  
+
+            // 计算对称点云中心
+            float centerX, centerY;
+            float sumX = 0.0f, sumY = 0.0f;
+            auto & pointsOrig = *clusteredPoints[iCluster];
+            for (int idx = 0; idx < pointsOrig.size(); ++idx)
+            {
+                sumX += pointsOrig[idx].x();
+                sumY += pointsOrig[idx].y();
+            }
+            centerX = sumX / pointsOrig.size();
+            centerY = sumY / pointsOrig.size();
+            markPoints->emplace_back(point(centerX, centerY, 0.0f));
+            // 对点云对象排序， 根据距离， 从近到远
+            // fprintf(stderr, "clusterTmp Size %d\n", clusterTmp.size());
+            // fprintf(stderr, "------\n");
+            // clusterTmp.sort();
+            std::vector<Point3f> frontKelemPoints(clusterTmp.size());
+            for (int idx = 0; idx < clusterTmp.size(); ++idx)
+            {
+                frontKelemPoints[idx].x = clusterTmp[idx].x();
+                frontKelemPoints[idx].y = clusterTmp[idx].y();
+                frontKelemPoints[idx].z = clusterTmp[idx].toSensor2D;
+            } 
+            std::sort(frontKelemPoints.begin(), frontKelemPoints.end(), 
+                    [](const Point3f & a, const Point3f & b){return a.z < b.z;});
+            // 取对象的前百分之 10 的点求平均值
+            int numFrontPoints = std::floor(clusterTmp.size() / 3);
+            
+            // fprintf(stderr, "numFrontPoints ");
+            std::vector<cv::Point2f> points;
+            Point2f frontMiddlePoint;
+            float sumFrontX = 0.0f, sumFrontY = 0.0f;
+            for (int idx = 0; idx < numFrontPoints; ++idx)
+            {
+                sumFrontX += frontKelemPoints[idx].x;
+                sumFrontY += frontKelemPoints[idx].y;
+                points.emplace_back(Point2f(frontKelemPoints[idx].x, frontKelemPoints[idx].y));
+            }
+            frontMiddlePoint.x = sumFrontX / numFrontPoints;
+            frontMiddlePoint.y = sumFrontY / numFrontPoints;
+            markPoints->emplace_back(point(frontMiddlePoint.x, frontMiddlePoint.y, 0.0f));
+            float correctFitPercent = 0.0f;
+            // fprintf(stderr, "has gone1 !\n");
+            // std::vector<cv::Point2f> points;
+            // for (int idx = 0; idx < clusterTmp.size(); ++idx)
+            // {
+            //     points.emplace_back(Point2f(frontKelemPoints[idx].x, frontKelemPoints[idx].y);
+            // }
+            // rectK = fitLineRansac(points, 30, 0.045, correctFitPercent, debugBool);        
+            // if (correctFitPercent < 0.8)
+            //     rectK = (centerY - frontMiddlePoint.y) / (centerX - frontMiddlePoint.x + 1e-3);
+
+            // 直接使用激光雷达中心到中心点的连线
+            rectK = (centerY) / (centerX + 1e-6);
+            // rectK = fitLine(points);
+            fitRect(rectK, *clusteredPoints[iCluster],  pcPoints);                   
+            if (debugBool)
+                fprintf(stderr, "\ncurrent rectK : %f\n", rectK);
+            hasRect = true;
+            // fprintf(stderr, "has gone12 finish !\n");
+        }
+        if(!hasRect && slopeDist > lSlopeDist && numPoints > lnumPoints)
+        {
+            // fprintf(stderr, "has gone3 !\n");
             float maxDist = 0;
             float maxDx, maxDy;
             bool findDPoint = false;
@@ -466,6 +550,7 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             markPoints->emplace_back(point(maxDx, maxDy, 0.0f));
             markPoints->emplace_back(point(maxMx, maxMy, 0.0f));
             markPoints->emplace_back(point(minMx, minMy, 0.0f));
+            
             // 求 垂线 俩边的点集合
             // float k = (maxMvecY - minMvecY) / (maxMvecX - minMvecX + 1e-6);
             // 这里出现过一个重大的 bug 求斜率时候， 写错了
@@ -557,15 +642,18 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             // fprintf(stderr, "dist A -- > B(%f, %f)\n", distA, distB);            
             // float zero
             float lessZero;
+            float longEdge;
             if (distA < distB)
             {
                 lessZero = k_1 * minMx + vet.y - minMy; 
                 markPoints->emplace_back(point((minMx + maxDx) / 2, (minMy + maxDy) / 2, 0.0f));
+                longEdge = distB;
             }            
             else
             {
                 lessZero = k_1 * maxMx + vet.y - maxMy;
                 markPoints->emplace_back(point((maxMx + maxDx) / 2, (maxMy + maxDy) / 2, 0.0f));
+                longEdge = distA;
             }
 
             // fprintf(stderr, "k : %f\n", k);  
@@ -582,6 +670,7 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
                 }
                 else if (dist * lessZero >= 0)
                 {
+                    // 是否需要提出长边的部分点， 例如头部点
                     if (debugBool)
                         fprintf(stderr, "K_1: %f,  dist : %f,  lessZero :%f \n", k_1, dist, lessZero);
                     // ptSet.emplace_back(clusterTmp[i]);
@@ -609,11 +698,41 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             // {
             if (iCluster == debugID)
                 fprintf(stderr, "ptSet size : %d\n", ptSet.size());
-
-            if (ptSet.size() >= 10)
-                rectK = fitLineRansac(ptSet, 100, 0.06f, debugBool);
+            // 判断是否是对称的
+            if (debugBool)
+            {
+                fprintf(stderr, "--- number symmetric points ---%d\n", 
+                    (*clusteredPoints[iCluster]).numSymPoints);
+            }
+            // if ((*clusteredPoints[iCluster]).numSymPoints < 25)
+            // {
+            // 点多或者边足够长
+            if (ptSet.size() >= 10 || longEdge > 1.5f)
+            {
+                float correct = 0.0f;
+                if (debugBool)
+                    fprintf(stderr, "using fitLineRansac\n");
+                rectK = fitLineRansac(ptSet, 100, 0.12f, correct, debugBool);
+            }
             else
+            {
+                if (debugBool)
+                    fprintf(stderr, "using fitLine\n");
                 rectK = fitLine(ptSet);
+            }
+            // }
+            // else
+            // {
+            //     if (debugBool)
+            //     {
+            //         fprintf(stderr, "using direction, num %d Symmetric points\n", 
+            //                 (*clusteredPoints[iCluster]).numSymPoints);
+            //     }
+            //     // 对称情况， 直接对全部点云使用 pac 方法  失败了
+            //     // rectK = direction(*clusteredPoints[iCluster]);
+            //     rectK = direction(ptSet);                
+            // }
+            
                 // fprintf(stderr, "rectK : %f\n", rectK);  
                 // 根据方向拟合 bbox 的                
             // }
@@ -627,8 +746,9 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             // }
             // 根据方向拟合 bbox 的
             fitRect(rectK, *clusteredPoints[iCluster],  pcPoints);
+            hasRect = true;
             if (debugBool)
-                fprintf(stderr, "\ncurrent rectK : %f\n", rectK);
+                fprintf(stderr, "\ncurrent 2 rectK : %f\n", rectK);
             // fprintf(stderr, "pcPoints:\n");
             // for (int idx = 0; idx < 4; ++idx)
             //     fprintf(stderr, "(%f, %f)\n", pcPoints[idx].x, pcPoints[idx].y);
@@ -640,8 +760,9 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
             // if(!isPromising) 
             //     continue;
         }
-        else
+        if (!hasRect)
         {
+            // fprintf(stderr, "has gone4 !\n");
             //MAR fitting
             // fprintf(stderr, "minAreaRect point size %d\n", pointVec.size());
             auto & cloud = (*clusteredPoints[iCluster]);
@@ -664,7 +785,7 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
         }
 
         // make pcl cloud for 3d bounding box
-        
+        // fprintf(stderr, "--------------757\n");
         bool saveIt = ruleBasedFilter(pcPoints, 
             clusteredPoints[iCluster]->maxZ - clusteredPoints[iCluster]->minZ, 
             clusteredPoints[iCluster]->size());
@@ -672,7 +793,7 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
         // 不进行保存 bbox
         if (!saveIt)
             continue;   
-
+        // fprintf(stderr, "--------------765\n");
         Cloud::Ptr oneBboxPtr(new Cloud);
         for(int pclH = 0; pclH < 2; pclH++)
         {//底面四个点,上面四个点
@@ -688,9 +809,11 @@ void getBBox(const vector<Cloud::Ptr> & clusteredPoints,
                 oneBboxPtr->emplace_back(o);
             }
         }
+        // fprintf(stderr, "--------------782\n");
         bbPoints.emplace_back(oneBboxPtr);
         // 正确的 bbox 新增一
         bboxToCluster[numCorrect] = iCluster;
+        // fprintf(stderr, "--------------783\n");
         numCorrect++;
     }
 }
@@ -744,7 +867,8 @@ void CloudToVertexs(const Cloud::Ptr & cloud,
 // ransac 算法
 float fitLineRansac(const vector<cv::Point2f>& clouds, 
                     const int & num_iterations,
-                    const float & tolerance,
+                    const float & tolerance,                    
+                    float & correct,
                     const bool & debug)
 {
     if (debug)
@@ -806,9 +930,14 @@ float fitLineRansac(const vector<cv::Point2f>& clouds,
     }
     // return best_plane;
     // 返回 k
+
+    correct = 1.0f * max_num_fit / clouds.size();
     if (debug)
+    {
         fprintf(stderr, "res line %f, max_num_fit %d\n", -1 * best_plane.x / best_plane.y, max_num_fit);
-    return -1 * best_plane.x / best_plane.y;
+        fprintf(stderr, "fit %f point\n", 1.0f * max_num_fit / clouds.size());
+    }
+    return -1 * best_plane.x / (best_plane.y + 1e-6);
 }
 
 // 最小二乘法
@@ -830,6 +959,44 @@ float fitLine(const std::vector<Point2f> & points)
     // y = k * x + b; 返回 k 和 b
     Eigen::VectorXd result = X.colPivHouseholderQr().solve(Y);
     return result(0);
+}
+
+float direction(const Cloud & cloud)
+{
+    cv::Mat pcaSet(cloud.size(), 2, CV_32FC1, cv::Scalar::all(0));
+    float *data = nullptr;
+    for (size_t i = 0; i < cloud.size(); ++i)
+    {
+        data = pcaSet.ptr<float>(i);
+        *data++ = cloud[i].x();
+        *data++ = cloud[i].y();
+    }
+    // 参数依次为：原始数据；原始数据均值，输入空会自己计算；
+    // 每行/列代表一个样本；保留多少特征值，默认全保留
+    cv::PCA pca(pcaSet, cv::Mat(), CV_PCA_DATA_AS_ROW, 2);
+    cv::Mat directionVec = pca.eigenvectors;
+    float k = directionVec.at<float>(0, 1) / 
+            directionVec.at<float>(0, 0);
+    return k;
+}
+
+float direction(const std::vector<Point2f> & cloud)
+{
+    cv::Mat pcaSet(cloud.size(), 2, CV_32FC1, cv::Scalar::all(0));
+    float *data = nullptr;
+    for (size_t i = 0; i < cloud.size(); ++i)
+    {
+        data = pcaSet.ptr<float>(i);
+        *data++ = cloud[i].x;
+        *data++ = cloud[i].y;
+    }
+    // 参数依次为：原始数据；原始数据均值，输入空会自己计算；
+    // 每行/列代表一个样本；保留多少特征值，默认全保留
+    cv::PCA pca(pcaSet, cv::Mat(), CV_PCA_DATA_AS_ROW, 2);
+    cv::Mat directionVec = pca.eigenvectors;
+    float k = directionVec.at<float>(0, 1) / 
+            directionVec.at<float>(0, 0);
+    return k;
 }
 
 void fitRect(const float & k, const Cloud & cloud, std::vector<Point2f> & rect)

@@ -24,6 +24,7 @@ MainWindow::MainWindow(QWidget *parent):
     angle_threshold = 10;
     depthImagefilter = false;
     girdImageResize = 1;
+    lShpaeHorizonResolution = 0.08;
     infoTextEdit = new QTextEdit;
     this->playCloud = false;
     this->curr_data_idx = 0;
@@ -91,8 +92,8 @@ MainWindow::MainWindow(QWidget *parent):
     ui->bboxCB->setChecked(false);
     // param adjust
     ui->paramDSB->setRange(-1000, 1000);
-    ui->paramDSB->setSingleStep(0.1);
-    ui->paramDSB->setDecimals(3);
+    ui->paramDSB->setSingleStep(0.01);
+    ui->paramDSB->setDecimals(4);
     ui->clearSelectionPB->setEnabled(false);
 
     // 数据 序列显示
@@ -141,6 +142,8 @@ MainWindow::MainWindow(QWidget *parent):
     depth_image2 = new QLabel(dockshow_depth_image2);
     depth_image2->setScaledContents(true);
     dockshow_depth_image2->setFloating(true);
+    
+    
 
     // dockshow_depth_image->close();
     // dockshow_depth_image2->close();
@@ -306,6 +309,7 @@ void MainWindow::onSliderMovedTo(int cloud_number)
     // 去地
     // fprintf(stderr, "<<<<<<<<<<<<<<<-------------------------------\n");
     SegmentaionNode groundRemove(params_groundRemove);
+
     // fprintf(stderr, "params_groundRemove.line_search_angle : %f\n", params_groundRemove.line_search_angle);
     // fprintf(stderr, "params_groundRemove.max_slope : %f\n", params_groundRemove.max_slope);
     
@@ -321,7 +325,7 @@ void MainWindow::onSliderMovedTo(int cloud_number)
     Cloud::Ptr obstacle_cloud(new Cloud);
     // Cloud ground_cloud, obstacle_cloud;
     Cloud::Ptr cloudTmp(new Cloud);
-    groundRemove.scanCallBack(*_cloud, *ground_cloud, *obstacle_cloud);
+    groundRemove.scanCallBack(*_cloud, *ground_cloud, *obstacle_cloud);    
     // fprintf(stderr, "------------------1\n");
     // 获取选择的 ID
     // if (_viewer->selection.size())
@@ -370,7 +374,7 @@ void MainWindow::onSliderMovedTo(int cloud_number)
     std::vector<Rect2D> rect2DVec;
     std::vector<Cloud::Ptr> clusters; 
     std::vector<Cloud::Ptr> bboxPts;  // minAre + pca
-    std::vector<Cloud::Ptr> bboxPts2; // L_shape
+    // std::vector<Cloud::Ptr> bboxPts2; // L_shape
     Cloud::Ptr markPoints(new Cloud); // 标记的点
 
     
@@ -394,7 +398,7 @@ void MainWindow::onSliderMovedTo(int cloud_number)
             }
         }
         Cloud::Ptr lShapePoints (new Cloud);
-        cluster.getLShapePoints(clusters, lShapePoints, bboxDebugId);
+        cluster.getLShapePoints(clusters, lShapePoints, bboxDebugId, lShpaeHorizonResolution);
         Eigen::Vector3f color;
         float pointSize = 3;
         color << 1.0, 0.0, 0.0;
@@ -675,6 +679,8 @@ void MainWindow::onParamSet()
         case (27):depthImagefilter = static_cast<bool>(paramValue);             break;
         case (28):angle_threshold = paramValue;                                 break; 
         case (29):girdImageResize = static_cast<size_t>(paramValue);            break;
+        // 提取 l shape 的时候的分辨率 0.08 默认
+        case (30):lShpaeHorizonResolution = paramValue;                         break;
         default:
             break;
     }

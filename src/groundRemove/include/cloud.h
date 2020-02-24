@@ -102,6 +102,10 @@ public:
     // std::vector<point> _points;
     inline void clear(){_points.clear();}
 
+    // 根据距离激光雷达的距离对点进行排序， 从近到远
+    inline void sort(){std::sort(_points.begin(), _points.end(), 
+        [](const point & a, const point & b){return a.toSensor2D < b.toSensor2D;});}
+
     typedef std::shared_ptr<Cloud> Ptr;
     typedef std::shared_ptr<const Cloud> ConstPtr;
 private:
@@ -117,5 +121,8 @@ public:
     // 存储 L-shape 的俩个拐点的坐标的索引
     int minLPoint = -1;
     int maxLPoint = -1;
+    
+    // 对称点的对数
+    size_t numSymPoints = 0;
 };
 #endif

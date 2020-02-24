@@ -55,7 +55,8 @@ public:
 
     void getLShapePoints(const std::vector<Cloud::Ptr> & clusters, 
                          Cloud::Ptr & points, 
-                         const int & debugID);
+                         const int & debugID,
+                         const float & lShpaeHorizonResolution);
 
     size_t ColFromAngle(float angle_cols);
     // 根据每个对象， 平均分配多少份

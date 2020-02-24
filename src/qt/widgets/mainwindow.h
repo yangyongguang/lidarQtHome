@@ -69,6 +69,7 @@ public:
     float angle_threshold;
     bool depthImagefilter;
     size_t girdImageResize;
+    float lShpaeHorizonResolution;
 
     std::unordered_map<int, int> bboxToCluster;
 protected:
